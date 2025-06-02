@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "moduleId": "grn.space.discussion",
+      "creator": {
+        "id": "1",
+        "code": "c000001",
+        "name": "Noboru Satoh(Satoh Noboru); Sales Department"
+      },
+      "createdAt": "2022-09-29T06:25:18Z",
+      "operation": "add",
+      "url": "https://sample.cybozu.com/g/space/application/discussion/index.csp?spid=1",
+      "title": "Developmennt schedule discussion",
+      "body": "06/20 - 09/11：Development\\r\\n10/01：Release",
+      "icon": "https://example.com/sample-icon.svg",
+      "isRead": false
+    }
+  ],
+  "hasNext": false
+}

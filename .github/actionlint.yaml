@@ -1,0 +1,5 @@
+config-variables:
+  - DEBUG_MODE
+paths:
+#  .github/workflows/**/*.yaml:
+#    ignore:

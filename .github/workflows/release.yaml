@@ -1,0 +1,57 @@
+name: release
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+jobs:
+  test:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/test.yaml
+    secrets: inherit
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      bozupy: ${{ steps.filter.outputs.bozupy }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        id: filter
+        with:
+          filters: |
+            bozupy:
+              - 'bozupy/**'
+              - 'requirements.txt'
+              - 'pyproject.toml'
+  create-tag:
+    needs: [test, changes]
+    if: needs.changes.outputs.bozupy == 'true'
+    runs-on: ubuntu-latest
+    env:
+      GIT_AUTHOR_NAME: actions-user
+      GIT_AUTHOR_EMAIL: action@github.com
+      GIT_COMMITTER_NAME: actions-user
+      GIT_COMMITTER_EMAIL: action@github.com
+    steps:
+      - uses: actions/checkout@v4
+      - name: get version
+        id: get-version
+        run: |
+          VERSION=$(grep "BOZUPY_VERSION: str = " bozupy/setting.py | sed -e "s/.* \"//" | sed -e "s/\".*//")
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+      - name: create tag
+        run: |
+          git tag -a "${{ steps.get-version.outputs.version }}" -m "version ${{ steps.get-version.outputs.version }}"
+          git push origin "${{ steps.get-version.outputs.version }}"
+      - name: create release
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564
+        with:
+          tag_name: ${{ steps.get-version.outputs.version }}
+          generate_release_notes: true
+  auto-update:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: chinthakagodawita/autoupdate@0707656cd062a3b0cf8fa9b2cda1d1404d74437e
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'

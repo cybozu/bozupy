@@ -1,0 +1,16 @@
+{
+  "groups": [
+    {
+      "id": "1",
+      "code": "recruit2022",
+      "name": "2022年度採用プロジェクト",
+      "description": "2022年度採用プロジェクト"
+    },
+    {
+      "id" : "7532782697181632513",
+      "code" : "everyone",
+      "name" : "Everyone",
+      "description" : ""
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+name: test
+on:
+  push:
+    branches-ignore:
+      - main
+  workflow_call:
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  checks: write
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      bozupy: ${{ steps.filter.outputs.bozupy }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        id: filter
+        with:
+          filters: |
+            bozupy:
+              - 'bozupy/**'
+              - 'requirements.txt'
+              - 'pyproject.toml'
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Run flake8
+        run: |
+          flake8
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: run mypy
+        run: |
+          mypy ./
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: create results directory
+        run: |
+          mkdir -p /tmp/results
+      - name: run pytest
+        run: |
+          python3 -m pytest --junit-xml /tmp/results/pytest.xml -v --cov=bozupy --cov-report=term-missing
+        continue-on-error: true
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test_results
+          path: /tmp/results/*.xml
+      - name: publish test results
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: /tmp/results/*.xml
+          check_name: Pytest Report
+  check-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: check coverage
+        run: |
+          result=$(python3 -m pytest --cov=bozupy | grep "TOTAL.*%")
+          percent="$(echo ${result} | cut -d" " -f 4 | sed -e "s/%//g")"
+          if [ "${percent}" -lt 85 ]; then
+              echo "Coverage is less than 85%."
+              exit 1
+          fi
+  version-match:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: match version
+        run: |
+          SETTING_VERSION=$(grep "BOZUPY_VERSION: str = " bozupy/setting.py | sed -e "s/.* \"//" | sed -e "s/\".*//")
+          PROJECT_VERSION=$(grep "version = " pyproject.toml | sed -e "s/.* = \"//" | sed -e "s/\".*//")
+          if [ "${SETTING_VERSION}" != "${PROJECT_VERSION}" ]; then
+              echo "BOZUPY_VERSION and pyproject.toml version are different."
+              exit 1
+          fi
+  version-bump:
+    needs: changes
+    runs-on: ubuntu-latest
+    if: ${{ github.ref != 'refs/heads/main' && needs.changes.outputs.bozupy == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: new branch version
+        id: new-branch
+        run: |
+          NEW_BRANCH_VERSION=$(grep "BOZUPY_VERSION: str = " bozupy/setting.py | sed -e "s/.* \"//" | sed -e "s/\".*//")
+          echo "version=${NEW_BRANCH_VERSION}" >> "${GITHUB_OUTPUT}"
+      - uses: actions/checkout@v4
+        with:
+            ref: main
+      - name: check version between main and new branch
+        run: |
+          MAIN_BRANCH_VERSION=$(grep "BOZUPY_VERSION: str = " bozupy/setting.py | sed -e "s/.* \"//" | sed -e "s/\".*//")
+          if [ "${MAIN_BRANCH_VERSION}" = "${{ steps.new-branch.outputs.version }}" ]; then
+              echo "BOZUPY_VERSION is not bumped yet."
+              exit 1
+          fi
+  check-code:
+    needs: changes
+    runs-on: ubuntu-latest
+    if: needs.changes.outputs.bozupy == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+      - name: code check
+        run: |
+          python3 bin/code-check.py

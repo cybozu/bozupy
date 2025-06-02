@@ -1,0 +1,10 @@
+flake8
+mypy
+pytest
+pytest-cov
+pytest-env
+pytest-mock
+responses
+types-PyYAML
+types-requests
+PyYAML
