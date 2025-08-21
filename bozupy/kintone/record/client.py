@@ -65,7 +65,10 @@ def get_records(
                 break
     finally:
         if not is_cursor_deleted:
-            delete("records/cursor", {"id": cursor}, app_id, access_data)
+            try:
+                delete("records/cursor", {"id": cursor}, app_id, access_data)
+            except Exception:
+                pass
 
 
 def get_record(app_id: int, record_id: int, access_data: AccessData | None = None) -> KintoneRecord:
