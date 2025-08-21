@@ -48,6 +48,42 @@ jobs:
         with:
           tag_name: ${{ steps.get-version.outputs.version }}
           generate_release_notes: true
+  build:
+    needs: [create-tag, changes]
+    if: needs.changes.outputs.bozupy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: install pypa/build
+        run: |
+          python3 -m pip install build --user
+      - name: build a binary wheel and a source tarball
+        run: python3 -m build
+      - name: store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+  publish-to-pypi:
+    needs: [build, changes]
+    if: needs.changes.outputs.bozupy == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/bozupy
+    permissions:
+      id-token: write
+    steps:
+      - name: download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
   auto-update:
     needs: test
     runs-on: ubuntu-latest
