@@ -15,7 +15,7 @@ for _filepath in _filepaths:
     if _filepath.exists():
         dotenv.load_dotenv(_filepath, override=True)
 
-BOZUPY_VERSION: str = "0.1.0"
+BOZUPY_VERSION: str = "0.1.1"
 
 logging.debug(f"BOZUPY_VERSION: {BOZUPY_VERSION}")
 USER_AGENT: str = os.environ.get("USER_AGENT", f"bozupy:v{BOZUPY_VERSION}")
