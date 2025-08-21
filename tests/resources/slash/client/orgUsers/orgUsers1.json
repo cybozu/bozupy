@@ -1,0 +1,46 @@
+{
+  "userTitles": [
+    {
+      "user": {
+        "id": "3",
+        "code": "sato-noboru",
+        "ctime": "2019-04-01T00:33:58Z",
+        "mtime": "2023-03-31T04:00:15Z",
+        "valid": true,
+        "name": "佐藤 昇",
+        "surName": "佐藤",
+        "givenName": "昇",
+        "surNameReading": "さとう",
+        "givenNameReading": "のぼる",
+        "localName": "",
+        "localNameLocale": "ja",
+        "timezone": "Asia/Tokyo",
+        "locale": "ja",
+        "description": "",
+        "phone": "0000-000-0000",
+        "mobilePhone": "090-000-0000",
+        "extensionNumber": "",
+        "email": "sato-noboru@example.com",
+        "callto": "",
+        "url": "",
+        "employeeNumber": "",
+        "birthDate": "1991-04-17",
+        "joinDate": "2020-04-01",
+        "primaryOrganization": "9",
+        "sortOrder": null,
+        "customItemValues": [
+          {
+            "code": "boss",
+            "value": "2"
+          }
+        ]
+      },
+      "title" : {
+        "id" : "1",
+        "code" : "Manager",
+        "name" : "マネージャー",
+        "description" : "マネージャー"
+      }
+    }
+  ]
+}

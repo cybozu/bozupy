@@ -1,0 +1,9 @@
+{
+  "id": "2",
+  "code": "Sales02",
+  "name": "海外営業部",
+  "localName": "International Sales Department",
+  "localNameLocale": "en",
+  "parentCode": "Sales00",
+  "description": "海外営業部"
+}

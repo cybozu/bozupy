@@ -1,0 +1,27 @@
+{
+  "id": "1",
+  "text": "加藤　美咲   営業本部 管理部受付 \n\n本日の作業レポートです。\n高橋　しおり さん、ご確認をお願いします。",
+  "createdAt": "2016-04-12T23:46:00Z",
+  "creator": {
+    "code": "sato",
+    "name": "佐藤　昇"
+  },
+  "mentions": [
+    {
+      "code": "kato",
+      "type": "USER"
+    },
+    {
+      "code": "営業本部_OZKQWZ",
+      "type": "ORGANIZATION"
+    },
+    {
+      "code": "管理部受付_zX6C6r",
+      "type": "GROUP"
+    },
+    {
+      "code": "takahashi",
+      "type": "USER"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "organizationTitles": [
+    {
+      "organization": {
+        "code": "Sales01",
+        "description": "国内営業部",
+        "id": "2",
+        "localName": "Domestic Sales Department",
+        "localNameLocale": "en",
+        "name": "国内営業部",
+        "parentCode": "A"
+      },
+      "title": {
+        "code": "Manager",
+        "description": "マネージャー",
+        "id": "1",
+        "name": "マネージャー"
+      }
+    }
+  ]
+}
