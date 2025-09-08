@@ -39,8 +39,9 @@ def get_headers(access_data: AccessData | None, has_body: bool = False, app_ids:
     return headers
 
 
-def check_response(res: requests.Response, is_plain: bool = False):
-    debug_response_print(res)
+def check_response(res: requests.Response, is_plain: bool = False, no_debug_print: bool = False) -> None:
+    if not no_debug_print:
+        debug_response_print(res)
     # エラーを出し分けたいのでres.raise_for_status()は使わない
     if res.status_code <= 299:
         if is_plain:

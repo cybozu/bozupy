@@ -53,7 +53,7 @@ def put(path: str, json_: dict, app_id: int | None = None, access_data: AccessDa
     return res.json()
 
 
-def delete(path: str, json_: dict | None, app_id: int | None = None, access_data: AccessData | None = None) -> dict:
+def delete(path: str, json_: dict | None, app_id: int | None = None, access_data: AccessData | None = None, no_debug_print: bool = False) -> dict:
     logging.info(f"DELETE: {path}")
     if access_data is None:
         access_data = AccessData()
@@ -63,5 +63,5 @@ def delete(path: str, json_: dict | None, app_id: int | None = None, access_data
         headers=get_headers(access_data=access_data, has_body=json_ is not None, app_ids=app_ids),
         json=json_
     )
-    check_response(res)
+    check_response(res, no_debug_print)
     return res.json()
