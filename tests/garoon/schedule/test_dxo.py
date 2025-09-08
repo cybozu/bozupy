@@ -6,20 +6,30 @@ from bozupy.garoon.schedule import dxo as sut, GaroonEvent
 from ...testtool import load
 
 
-@pytest.mark.parametrize(["filename"], [
-    ["event.json"],
-    ["event_no_watchers.json"]
+@pytest.mark.parametrize(["filename", "has_start", "has_repeat_info"], [
+    ["event.json", True, False],
+    ["event_no_watchers.json", True, False],
+    ["event-repeating.json", False, True]
 ])
-def test_to_event(filename: str):
+def test_to_event(filename: str, has_start: bool, has_repeat_info: bool):
     event_json: dict = load(filename)
     actual: GaroonEvent = sut.to_event(event_json)
     assert actual.id
     assert actual.subject
     assert actual.creator_code
     assert actual.event_type
-    assert actual.start
+    if has_start:
+        assert actual.start
+        assert isinstance(actual.start, datetime)
+    else:
+        assert actual.start is None
+    if has_repeat_info:
+        assert actual.repeat_info
+        assert actual.repeat_info.period_start
+        assert actual.repeat_info.period_end
+    else:
+        assert actual.repeat_info is None
     assert actual.created_at
-    assert isinstance(actual.start, datetime)
 
 
 @pytest.mark.parametrize(["filename"], [

@@ -1,0 +1,52 @@
+{
+  "id": "5116660",
+  "creator": {
+    "id": "1",
+    "code": "test", "name": "test"
+  },
+  "createdAt": "2025-07-14T07:01:42Z",
+  "updater": {
+    "id": "2",
+    "code": "test2",
+    "name": "test2"
+  },
+  "updatedAt": "2025-08-20T0",
+  "eventType": "REPEATING",
+  "eventMenu": "",
+  "subject": "test",
+  "notes": "test",
+  "attendees": [
+    {
+      "id": "1", "name": "test", "type": "USER", "code": "test"
+    },
+    {
+      "id": "2",
+      "name": "test2",
+      "type": "USER",
+      "code": "test2"
+    }
+  ],
+  "originalStartTimeZone": "Asia/Tokyo",
+  "originalEndTimeZone": "Asia/Tokyo",
+  "watchers": [],
+  "facilities": [],
+  "visibilityType": "PUBLIC",
+  "repeatInfo": {
+    "type": "EVERY_WEEK",
+    "period": {
+      "start": "2025-08-11",
+      "end": "2025-10-01"
+    },
+    "time": {
+      "start": "11:05",
+      "end": "11:30"
+    },
+    "timeZone": "Asia/Tokyo",
+    "isAllDay": false,
+    "isStartOnly": false,
+    "dayOfWeek": "WED",
+    "exclusiveDateTimes": []
+  },
+  "accessRights": [],
+  "canPostComment": false
+}

@@ -66,7 +66,7 @@ def get_records(
     finally:
         if not is_cursor_deleted:
             try:
-                delete("records/cursor", {"id": cursor}, app_id, access_data)
+                delete("records/cursor", {"id": cursor}, app_id, access_data, no_debug_print=True)
             except Exception:
                 pass
 
