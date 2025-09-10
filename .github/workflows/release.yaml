@@ -1,9 +1,8 @@
 name: release
 on:
-  pull_request:
+  push:
     branches:
       - main
-    types: [closed]
 permissions:
   id-token: write
   contents: write
@@ -11,7 +10,6 @@ permissions:
   checks: write
 jobs:
   test:
-    if: github.event.pull_request.merged == true
     uses: ./.github/workflows/test.yaml
     secrets: inherit
   changes:
@@ -25,7 +23,7 @@ jobs:
         with:
           filters: |
             bozupy:
-              - 'bozupy/**'
+              - 'bozupy/**/*.py'
               - 'requirements.txt'
               - 'pyproject.toml'
   create-tag:
