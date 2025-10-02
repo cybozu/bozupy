@@ -219,6 +219,7 @@ def debug_response_print(response: requests.Response) -> None:
         return
     log_message: str = "\n".join([
         "##request",
+        str(response.request.method),
         str(response.request.url),
         str(response.request.headers),
         str(response.request.body),
