@@ -63,5 +63,5 @@ def delete(path: str, json_: dict | None, app_id: int | None = None, access_data
         headers=get_headers(access_data=access_data, has_body=json_ is not None, app_ids=app_ids),
         json=json_
     )
-    check_response(res, no_debug_print)
+    check_response(res, no_debug_print=no_debug_print)
     return res.json()
