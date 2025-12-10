@@ -402,8 +402,11 @@ class KIntoneRecordSubtableRow:
     def set_field(self, field_: KintoneRecordField) -> None:
         self.fields[field_.code] = field_
 
-    def get_field(self, code: str) -> KintoneRecordField:
-        return self.fields[code]
+    def get_field(self, code: str, field_type: Type[_FieldType]) -> _FieldType:
+        field_: KintoneRecordField = self.fields[code]
+        if not isinstance(field_, field_type):
+            raise ValueError(f"Field type mismatch: {field_}")
+        return field_
 
 
 @dataclass
