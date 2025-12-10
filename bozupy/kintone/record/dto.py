@@ -220,6 +220,8 @@ class KintoneRecordRichTextField(_KintoneRecordStrField):
 
 @dataclass
 class KintoneRecordNumberField(KintoneRecordField[float | None]):
+    value: float | None  # mypy型チェックのために明示的にoverrideしておく
+
     @classmethod
     def field_type(cls) -> str:
         return "NUMBER"
