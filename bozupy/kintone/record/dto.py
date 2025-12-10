@@ -197,6 +197,7 @@ class KintoneRecordSingleLineTextField(_KintoneRecordStrField):
     @classmethod
     def field_type(cls) -> str:
         return "SINGLE_LINE_TEXT"
+    # TODO: 自動計算が含まれるときだけupdatable: Falseにしたい
 
 
 @dataclass
@@ -237,6 +238,10 @@ class KintoneRecordCalcField(_KintoneRecordStrField):
     @classmethod
     def field_type(cls) -> str:
         return "CALC"
+
+    @classmethod
+    def updatable(cls) -> bool:
+        return False
 
 
 @dataclass
@@ -454,17 +459,29 @@ class KintoneRecordCategoryField(_KintoneRecordSetField):
     def field_type(cls) -> str:
         return "CATEGORY"
 
+    @classmethod
+    def updatable(cls) -> bool:
+        return False
+
 
 class KintoneRecordStatusField(_KintoneRecordStrField):
     @classmethod
     def field_type(cls) -> str:
         return "STATUS"
 
+    @classmethod
+    def updatable(cls) -> bool:
+        return False
+
 
 class KintoneRecordAssigneeField(_KintoneRecordCodeSelectField):
     @classmethod
     def field_type(cls) -> str:
         return "STATUS_ASSIGNEE"
+
+    @classmethod
+    def updatable(cls) -> bool:
+        return False
 
 
 _FieldType = TypeVar("_FieldType", bound=KintoneRecordField)
