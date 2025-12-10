@@ -1,18 +1,23 @@
-from .client import get_records_by_offset, update_record_assignees, update_record_status
-from .client import get_records
-from .client import get_record
-from .client import add_record
-from .client import add_record_raw
-from .client import add_records
-from .client import add_records_raw
-from .client import update_record
-from .client import update_record_raw
-from .client import update_records
-from .client import update_records_raw
-from .client import upsert_record
-from .client import delete_records
-from .client import upload_file
-from .client import download_file
+from .client import (
+    get_records_by_offset,
+    update_record_assignees,
+    update_record_status,
+    upsert_records,
+    get_records,
+    get_record,
+    add_record,
+    add_record_raw,
+    add_records,
+    add_records_raw,
+    update_record,
+    update_record_raw,
+    update_records,
+    update_records_raw,
+    upsert_record,
+    delete_records,
+    upload_file,
+    download_file,
+)
 from .dto import KintoneRecordField, KintoneRecordCodeField, KintoneRecordIDField, KintoneRecordRevisionField, KintoneRecordCreatorField, KintoneRecordCreatedTimeField, KintoneRecordModifierField, KintoneRecordUpdatedTimeField, KintoneRecordSingleLineTextField, KintoneRecordMultiLineTextField, KintoneRecordRichTextField, KintoneRecordNumberField, KintoneRecordCalcField, KintoneRecordCheckBoxField, KintoneRecordRadioButtonField, KintoneRecordMultiSelectField, KintoneRecordDropDownField, KintoneRecordUserSelectField, KintoneRecordOrgSelectField, KintoneRecordGroupSelectField, KintoneRecordDateField, KintoneRecordTimeField, KintoneRecordDateTimeField, KintoneRecordLinkField, KintoneRecordFile, KintoneRecordFileField, KIntoneRecordSubtableRow, KintoneRecordSubtableField, KintoneRecordCategoryField, KintoneRecordStatusField, KintoneRecordAssigneeField, KintoneRecord
 from . import query
 
@@ -30,6 +35,7 @@ __all__: list[str] = [
     update_records.__name__,
     update_records_raw.__name__,
     upsert_record.__name__,
+    upsert_records.__name__,
     delete_records.__name__,
     upload_file.__name__,
     download_file.__name__,
