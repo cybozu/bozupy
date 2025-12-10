@@ -9,7 +9,7 @@ from responses.registries import OrderedRegistry
 from bozupy.kintone.record.dto import KintoneRecord
 from ...testtool import set_mock_response, DUMMY_ACCESS_DATA, AuthMode
 
-from bozupy.kintone.record import client as sut
+from bozupy.kintone.record import client as sut, KintoneRecordSingleLineTextField
 
 
 @responses.activate
@@ -136,6 +136,21 @@ def test_upsert_record_update(mocker: MockFixture) -> None:
     mocker.patch("bozupy.kintone.record.client.add_record", side_effect=Exception)
     mocker.patch("bozupy.kintone.record.client.update_record", return_value=1)
     assert sut.upsert_record(KintoneRecord(app_id=1), "key", "value", DUMMY_ACCESS_DATA) == 1
+
+
+@responses.activate
+def test_upsert_records() -> None:
+    set_mock_response("PUT", "/k/v1/records.json", 200, {}, req_json={"app": 1, "upsert": True, "records": [{"updateKey": "hoge", "record": {"hoge": {"value": "huga"}}}]}, auth=AuthMode.API_TOKEN)
+    record: KintoneRecord = KintoneRecord(app_id=1)
+    record.set_field(KintoneRecordSingleLineTextField("hoge", "huga"))
+    sut.upsert_records([record], "hoge", DUMMY_ACCESS_DATA)
+
+
+def test_upsert_records_update_key_field_is_required() -> None:
+    record: KintoneRecord = KintoneRecord(app_id=1)
+    record.set_field(KintoneRecordSingleLineTextField("hoge", "huga"))
+    with pytest.raises(ValueError):
+        sut.upsert_records([KintoneRecord(app_id=1, id=1)], "aaa", DUMMY_ACCESS_DATA)
 
 
 def test_upsert_record_cannot_set_record_id() -> None:

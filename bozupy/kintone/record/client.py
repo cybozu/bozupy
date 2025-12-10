@@ -181,6 +181,23 @@ def upsert_record(record: KintoneRecord, key: str, value: str | int, access_data
         return add_record(record=record, access_data=access_data)
 
 
+def upsert_records(records: list[KintoneRecord], key: str, access_data: AccessData | None = None, additional_app_ids: set[int] | None = None) -> None:
+    logging.info("Upsert Records")
+    app_ids: set[int] = {r.app_id for r in records}
+    if len(app_ids) != 1:
+        raise ValueError("all records must be in the same app")
+    app_id: int = int(app_ids.pop())
+    raw_records: list[dict] = []
+    for r in records:
+        raw_record: dict = dxo.to_dict(r, True)
+        if key not in raw_record:
+            raise ValueError(f"key {key} is required")
+        raw_records.append(raw_record)
+    while len(raw_records) != 0:
+        put("records", {"app": app_id, "upsert": True, "records": [{"updateKey": key, "record": record} for record in raw_records[:_DEFAULT_LIMIT]]}, app_id, access_data, additional_app_ids)
+        raw_records = raw_records[_DEFAULT_LIMIT:]
+
+
 def delete_records(app_id: int, record_ids: set[int], access_data: AccessData | None = None) -> None:
     logging.info(f"Delete Records: {app_id}")
     record_ids_: list[int] = [int(id_) for id_ in record_ids]

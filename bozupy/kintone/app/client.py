@@ -124,12 +124,14 @@ def get_app_acl(app_id: int, access_data: AccessData | None = None) -> list[dict
     return res.json()["rights"]
 
 
-def upsert_graph(app_id: int, graph_id: int, graph: KintoneGraphBuilder, query: KintoneQueryBuilder | None = None, access_data: AccessData | None = None) -> None:
+def upsert_graph(app_id: int, graph_id: int, graph: KintoneGraphBuilder, query: KintoneQueryBuilder | str | None = None, access_data: AccessData | None = None) -> None:
     logging.info(f"Upsert Graph: {app_id} - {graph_id}")
     graph_json: dict = graph.build()
     graph_json["index"] = int(graph_id)
     graph_json["periodicReport"] = None  # TODO
-    if query is not None:
+    if isinstance(query, str):
+        graph_json["filterCond"] = query
+    elif isinstance(query, KintoneQueryBuilder):
         graph_json["filterCond"] = query.build()
     else:
         graph_json["filterCond"] = ""
