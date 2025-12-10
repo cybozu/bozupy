@@ -22,8 +22,8 @@ def get_headers(access_data: AccessData | None, has_body: bool = False, app_ids:
     tokens: set[str] = set([])
     if app_ids is None:
         app_ids = set([])
-    elif isinstance(app_ids, int):
-        app_ids = {app_ids}
+    elif isinstance(app_ids, int) or isinstance(app_ids, float):
+        app_ids = {int(app_ids)}
     for app_id in app_ids:
         if app_id in access_data.app_tokens:
             tokens.add(access_data.app_tokens[app_id])
