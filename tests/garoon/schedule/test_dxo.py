@@ -1,34 +1,25 @@
-from datetime import datetime
+from typing import Type
 
 import pytest
 
 from bozupy.garoon.schedule import dxo as sut, GaroonEvent
+from bozupy.garoon.schedule.dto import GaroonEventBase, GaroonRepeatEvent
 from ...testtool import load
 
 
-@pytest.mark.parametrize(["filename", "has_start", "has_repeat_info"], [
-    ["event.json", True, False],
-    ["event_no_watchers.json", True, False],
-    ["event-repeating.json", False, True]
+@pytest.mark.parametrize(["filename", "expected_class"], [
+    ["event.json", GaroonEvent],
+    ["event_no_watchers.json", GaroonEvent],
+    ["event-repeating.json", GaroonRepeatEvent]
 ])
-def test_to_event(filename: str, has_start: bool, has_repeat_info: bool):
+def test_to_event(filename: str, expected_class: Type[GaroonEventBase]):
     event_json: dict = load(filename)
-    actual: GaroonEvent = sut.to_event(event_json)
+    actual: GaroonEventBase = sut.to_event(event_json)
+    assert isinstance(actual, expected_class)
     assert actual.id
     assert actual.subject
     assert actual.creator_code
     assert actual.event_type
-    if has_start:
-        assert actual.start
-        assert isinstance(actual.start, datetime)
-    else:
-        assert actual.start is None
-    if has_repeat_info:
-        assert actual.repeat_info
-        assert actual.repeat_info.period_start
-        assert actual.repeat_info.period_end
-    else:
-        assert actual.repeat_info is None
     assert actual.created_at
 
 

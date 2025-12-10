@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, time, date
 
 from ..constant import EventTypes
@@ -26,17 +26,25 @@ class RepeatInfo:
 
 
 @dataclass
-class GaroonEvent:
+class GaroonEventBase:
     id: int
     subject: str
     creator_code: str
     event_type: EventTypes
-    start: datetime | None
-    end: datetime | None
     created_at: datetime
     attendee_codes: set[str]
     watcher_codes: set[str]
-    facility_codes: set[str] = field(default_factory=set)
-    note: str | None = None
-    label: str | None = None
-    repeat_info: RepeatInfo | None = None
+    facility_codes: set[str]
+    note: str | None
+    label: str | None
+
+
+@dataclass
+class GaroonEvent(GaroonEventBase):
+    start: datetime
+    end: datetime | None
+
+
+@dataclass
+class GaroonRepeatEvent(GaroonEventBase):
+    repeat_info: RepeatInfo

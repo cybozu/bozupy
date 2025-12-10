@@ -5,7 +5,7 @@ import requests
 
 # 何故かこの０ファイルだけfrom .dxo import to_eventだとテストでモックできなくなるので回避策
 from . import dxo
-from .dto import GaroonEvent, Facility
+from .dto import GaroonEvent, Facility, GaroonEventBase
 from ...cybozu.dto import AccessData
 from ...cybozu.util import get_headers, check_response
 from ...util import datetime_to_garoon_jst_str, date_to_garoon_jst_str, garoon_str_to_datetime
@@ -13,7 +13,7 @@ from ...util import datetime_to_garoon_jst_str, date_to_garoon_jst_str, garoon_s
 _DEFAULT_LIMIT: int = 100
 
 
-def get_event(event_id: int, access_data: AccessData | None = None) -> GaroonEvent:
+def get_event(event_id: int, access_data: AccessData | None = None) -> GaroonEventBase:
     logging.info(f"Get Event: {event_id}")
     if access_data is None:
         access_data = AccessData()
@@ -115,7 +115,7 @@ def search_events(access_data: AccessData | None = None, query: str | None = Non
         events.extend(result)
         if len(result) < _DEFAULT_LIMIT:
             break
-    return [dxo.to_event(event) for event in events]
+    return [dxo.to_normal_event(event) for event in events]
 
 
 def get_available_times(user_codes: list[str], time_interval: int, start: datetime, end: datetime, access_data: AccessData | None = None) -> list[tuple[datetime, datetime]]:
