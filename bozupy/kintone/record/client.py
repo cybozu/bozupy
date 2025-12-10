@@ -22,7 +22,7 @@ def get_records_by_offset(app_id: int,
                           query: KintoneQueryBuilder | None = None,
                           access_data: AccessData | None = None) -> Iterator[KintoneRecord]:
     logging.info(f"Get Records by Offset: {app_id}")
-    params: dict = {"app": app_id}
+    params: dict = {"app": int(app_id)}
     query_: KintoneQueryBuilder = KintoneQueryBuilder() if query is None else query
     # TODO: protectedメンバにアクセスしているので修正する
     # noinspection PyProtectedMember
@@ -44,7 +44,7 @@ def get_records(
         query: KintoneQueryBuilder | None = None,
         access_data: AccessData | None = None) -> Iterator[KintoneRecord]:
     logging.info(f"Get Records: {app_id}")
-    params: dict = {"app": app_id, "size": _DEFAULT_GET_RECORD_LIMIT}
+    params: dict = {"app": int(app_id), "size": _DEFAULT_GET_RECORD_LIMIT}
     if query is not None:
         params["query"] = query.build(is_cursor=True)
         # noinspection PyProtectedMember
@@ -65,6 +65,7 @@ def get_records(
                 break
     finally:
         if not is_cursor_deleted:
+            # noinspection PyBroadException
             try:
                 delete("records/cursor", {"id": cursor}, app_id, access_data, no_debug_print=True)
             except Exception:
@@ -73,7 +74,7 @@ def get_records(
 
 def get_record(app_id: int, record_id: int, access_data: AccessData | None = None) -> KintoneRecord:
     logging.info(f"Get Record: {app_id}, {record_id}")
-    return dxo.to_record(get("record", {"app": app_id, "id": record_id}, app_id, access_data)["record"], app_id, record_id)
+    return dxo.to_record(get("record", {"app": int(app_id), "id": int(record_id)}, app_id, access_data)["record"], app_id, record_id)
 
 
 def add_record(record: KintoneRecord, access_data: AccessData | None = None, additional_app_ids: set[int] | None = None) -> int:
@@ -87,7 +88,7 @@ def add_record(record: KintoneRecord, access_data: AccessData | None = None, add
 
 def add_record_raw(app_id: int, record: dict, access_data: AccessData | None = None, additional_app_ids: set[int] | None = None) -> int:
     logging.info(f"Add Record Raw: {app_id}")
-    res: dict = post("record", {"app": app_id, "record": record}, app_id, access_data, additional_app_ids)
+    res: dict = post("record", {"app": int(app_id), "record": record}, app_id, access_data, additional_app_ids)
     return int(res["id"])
 
 
@@ -113,7 +114,7 @@ def add_records_raw(app_id: int, records: list[dict], access_data: AccessData | 
         res: dict = post(
             "records",
             {
-                "app": app_id,
+                "app": int(app_id),
                 "records": [r for r in records[:_DEFAULT_LIMIT]]
             },
             app_id,
@@ -134,7 +135,7 @@ def update_record(record: KintoneRecord, access_data: AccessData | None = None, 
 
 def update_record_raw(app_id: int, record_id: int, record: dict, access_data: AccessData | None = None, additional_app_ids: set[int] | None = None) -> None:
     logging.info(f"Update Record Raw: {app_id}, {record_id}")
-    put("record", {"app": app_id, "id": record_id, "record": record}, app_id, access_data, additional_app_ids)
+    put("record", {"app": int(app_id), "id": int(record_id), "record": record}, app_id, access_data, additional_app_ids)
 
 
 def update_records(records: list[KintoneRecord], access_data: AccessData | None = None, additional_app_ids: set[int] | None = None) -> None:
@@ -158,7 +159,7 @@ def update_records(records: list[KintoneRecord], access_data: AccessData | None 
 def update_records_raw(app_id: int, records: list[tuple[int, dict]], access_data: AccessData | None = None, additional_app_ids: set[int] | None = None) -> None:
     logging.info("Update Records Raw")
     while len(records) != 0:
-        put("records", {"app": app_id, "records": [{"id": record_id, "record": record} for record_id, record in records[:_DEFAULT_LIMIT]]}, app_id, access_data, additional_app_ids)
+        put("records", {"app": int(app_id), "records": [{"id": record_id, "record": record} for record_id, record in records[:_DEFAULT_LIMIT]]}, app_id, access_data, additional_app_ids)
         records = records[_DEFAULT_LIMIT:]
 
 
@@ -180,11 +181,28 @@ def upsert_record(record: KintoneRecord, key: str, value: str | int, access_data
         return add_record(record=record, access_data=access_data)
 
 
+def upsert_records(records: list[KintoneRecord], key: str, access_data: AccessData | None = None, additional_app_ids: set[int] | None = None) -> None:
+    logging.info("Upsert Records")
+    app_ids: set[int] = {r.app_id for r in records}
+    if len(app_ids) != 1:
+        raise ValueError("all records must be in the same app")
+    app_id: int = int(app_ids.pop())
+    raw_records: list[dict] = []
+    for r in records:
+        raw_record: dict = dxo.to_dict(r, True)
+        if key not in raw_record:
+            raise ValueError(f"key {key} is required")
+        raw_records.append(raw_record)
+    while len(raw_records) != 0:
+        put("records", {"app": app_id, "upsert": True, "records": [{"updateKey": key, "record": record} for record in raw_records[:_DEFAULT_LIMIT]]}, app_id, access_data, additional_app_ids)
+        raw_records = raw_records[_DEFAULT_LIMIT:]
+
+
 def delete_records(app_id: int, record_ids: set[int], access_data: AccessData | None = None) -> None:
     logging.info(f"Delete Records: {app_id}")
-    record_ids_: list[int] = list(record_ids)
+    record_ids_: list[int] = [int(id_) for id_ in record_ids]
     while record_ids_:
-        delete("records", {"app": app_id, "ids": record_ids_[:_DEFAULT_LIMIT]}, app_id, access_data)
+        delete("records", {"app": int(app_id), "ids": record_ids_[:_DEFAULT_LIMIT]}, app_id, access_data)
         record_ids_ = record_ids_[_DEFAULT_LIMIT:]
 
 
@@ -224,12 +242,12 @@ def update_record_assignees(app_id: int, record_id: int, assignees: set[str], ac
     logging.info(f"Update Record Assignees: {app_id}, {record_id}")
     if len(assignees) > 100:
         raise ValueError("assignees must be less than or equal to 100")
-    put("record/assignees", {"app": app_id, "id": record_id, "assignees": list(assignees)}, app_id, access_data)
+    put("record/assignees", {"app": int(app_id), "id": int(record_id), "assignees": list(assignees)}, app_id, access_data)
 
 
 def update_record_status(app_id: int, record_id: int, action: str, assignee: str | None = None, access_data: AccessData | None = None) -> None:
     logging.info(f"Update Record Status: {app_id}, {record_id}")
-    json_: dict = {"app": app_id, "id": record_id, "action": action}
+    json_: dict = {"app": int(app_id), "id": int(record_id), "action": action}
     if assignee is not None:
         json_["assignee"] = assignee
     put("record/status", json_, app_id, access_data)

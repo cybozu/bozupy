@@ -5,7 +5,7 @@ import requests
 
 # 何故かこの０ファイルだけfrom .dxo import to_eventだとテストでモックできなくなるので回避策
 from . import dxo
-from .dto import GaroonEvent, Facility
+from .dto import GaroonEvent, Facility, GaroonEventBase
 from ...cybozu.dto import AccessData
 from ...cybozu.util import get_headers, check_response
 from ...util import datetime_to_garoon_jst_str, date_to_garoon_jst_str, garoon_str_to_datetime
@@ -13,13 +13,13 @@ from ...util import datetime_to_garoon_jst_str, date_to_garoon_jst_str, garoon_s
 _DEFAULT_LIMIT: int = 100
 
 
-def get_event(event_id: int, access_data: AccessData | None = None) -> GaroonEvent:
+def get_event(event_id: int, access_data: AccessData | None = None) -> GaroonEventBase:
     logging.info(f"Get Event: {event_id}")
     if access_data is None:
         access_data = AccessData()
     # https://cybozu.dev/ja/garoon/docs/rest-api/schedule/get-schedule-event/
     res: requests.Response = requests.get(
-        f"https://{access_data.host}/g/api/v1/schedule/events/{event_id}",
+        f"https://{access_data.host}/g/api/v1/schedule/events/{int(event_id)}",
         headers=get_headers(access_data=access_data)
     )
     check_response(res)
@@ -61,7 +61,7 @@ def update_event(event_id: int, start: datetime | None, end: datetime, title: st
     if access_data is None:
         access_data = AccessData()
     res: requests.Response = requests.patch(
-        f"https://{access_data.host}/g/api/v1/schedule/events/{event_id}",
+        f"https://{access_data.host}/g/api/v1/schedule/events/{int(event_id)}",
         headers=get_headers(access_data=access_data, has_body=True),
         json={
             "eventType": "REGULAR",
@@ -104,7 +104,7 @@ def search_events(access_data: AccessData | None = None, query: str | None = Non
             params["rangeEnd"] = date_to_garoon_jst_str(end)
         if user_id:
             params["targetType"] = "user"
-            params["target"] = str(user_id)
+            params["target"] = str(int(user_id))
         res: requests.Response = requests.get(
             f"https://{access_data.host}/g/api/v1/schedule/events",
             headers=get_headers(access_data=access_data),
@@ -115,7 +115,7 @@ def search_events(access_data: AccessData | None = None, query: str | None = Non
         events.extend(result)
         if len(result) < _DEFAULT_LIMIT:
             break
-    return [dxo.to_event(event) for event in events]
+    return [dxo.to_normal_event(event) for event in events]
 
 
 def get_available_times(user_codes: list[str], time_interval: int, start: datetime, end: datetime, access_data: AccessData | None = None) -> list[tuple[datetime, datetime]]:
@@ -145,7 +145,7 @@ def get_available_times(user_codes: list[str], time_interval: int, start: dateti
 def get_event_data_store(access_data: AccessData, event_id: int, name: str) -> dict:
     logging.info(f"Get Event Data Store: {event_id}: {name}")
     res: requests.Response = requests.get(
-        f"https://{access_data.host}/g/api/v1/schedule/events/{event_id}/datastore/{name}",
+        f"https://{access_data.host}/g/api/v1/schedule/events/{int(event_id)}/datastore/{name}",
         headers=get_headers(access_data=access_data)
     )
     check_response(res)
@@ -155,7 +155,7 @@ def get_event_data_store(access_data: AccessData, event_id: int, name: str) -> d
 def add_event_data_store(access_data: AccessData, event_id: int, name: str, data: dict[str, str | int | dict | list]) -> None:
     logging.info(f"Add Event Data Store: {event_id}: {name}")
     res: requests.Response = requests.post(
-        f"https://{access_data.host}/g/api/v1/schedule/events/{event_id}/datastore/{name}",
+        f"https://{access_data.host}/g/api/v1/schedule/events/{int(event_id)}/datastore/{name}",
         headers=get_headers(access_data=access_data, has_body=True),
         json={"value": data}
     )
@@ -165,7 +165,7 @@ def add_event_data_store(access_data: AccessData, event_id: int, name: str, data
 def update_event_data_store(access_data: AccessData, event_id: int, name: str, data: dict[str, str | int | dict | list]) -> None:
     logging.info(f"Update Event Data Store: {event_id}: {name}")
     res: requests.Response = requests.put(
-        f"https://{access_data.host}/g/api/v1/schedule/events/{event_id}/datastore/{name}",
+        f"https://{access_data.host}/g/api/v1/schedule/events/{int(event_id)}/datastore/{name}",
         headers=get_headers(access_data=access_data, has_body=True),
         json={"value": data}
     )

@@ -20,8 +20,8 @@ def get_record_comments(app_id: int, record_id: int, access_data: AccessData | N
     offset: int = 0
     while True:
         json_: dict = get("record/comments", {
-            "app": app_id,
-            "record": record_id,
+            "app": int(app_id),
+            "record": int(record_id),
             "order": "asc",
             "offset": offset,
             "limit": _DEFAULT_GET_RECORD_COMMENT_LIMIT
@@ -42,8 +42,8 @@ def post_record_comment(app_id: int, record_id: int, comment: str, mention_codes
     else:
         mention_codes_ = mention_codes
     res: dict = post("record/comment", {
-        "app": app_id,
-        "record": record_id,
+        "app": int(app_id),
+        "record": int(record_id),
         "comment": {
             "text": comment,
             "mentions": [
@@ -68,8 +68,8 @@ def post_thread_comment(
         path="space/thread/comment",
         access_data=access_data,
         json_={
-            "space": space_id,
-            "thread": thread_id,
+            "space": int(space_id),
+            "thread": int(thread_id),
             "comment": {
                 "text": comment,
                 "mentions": [

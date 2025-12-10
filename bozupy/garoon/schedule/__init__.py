@@ -7,7 +7,7 @@ from .client import get_event_data_store
 from .client import add_event_data_store
 from .client import update_event_data_store
 from .client import get_facilities
-from .dto import Facility, GaroonEvent, RepeatInfo
+from .dto import Facility, GaroonEvent, RepeatInfo, GaroonRepeatEvent, GaroonEventBase
 
 __all__: list[str] = [
     get_event.__name__,
@@ -21,5 +21,7 @@ __all__: list[str] = [
     get_facilities.__name__,
     Facility.__name__,
     GaroonEvent.__name__,
+    GaroonRepeatEvent.__name__,
+    GaroonEventBase.__name__,
     RepeatInfo.__name__
 ]

@@ -43,7 +43,7 @@ def test_search_events() -> None:
 @responses.activate(registry=OrderedRegistry)
 def test_search_events_offset(mocker: MockerFixture) -> None:
     mocker.patch(
-        "bozupy.garoon.schedule.dxo.to_event",
+        "bozupy.garoon.schedule.dxo.to_normal_event",
         return_value=None
     )
     set_mock_response("GET", "/g/api/v1/schedule/events", 200, {"events": [_ for _ in range(100)]}, req_params={"limit": 100, "offset": 0}, auth=AuthMode.PASSWORD)

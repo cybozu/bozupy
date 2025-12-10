@@ -15,7 +15,7 @@ def get_space(space_id: int, access_data: AccessData | None = None) -> Space:
     logging.info(f"Get Space: {space_id}")
     json_: dict = get(
         path="space",
-        params={"id": space_id},
+        params={"id": int(space_id)},
         access_data=access_data
     )
     return dxo.to_space(json_)
@@ -26,7 +26,7 @@ def update_space_body(space_id: int, body: str, access_data: AccessData | None =
     put(
         path="space/body",
         json_={
-            "id": space_id,
+            "id": int(space_id),
             "body": body
         },
         access_data=access_data
@@ -53,7 +53,7 @@ def update_space_members(
     put(
         path="space/members",
         json_={
-            "id": space_id,
+            "id": int(space_id),
             "members": [
                 {
                     "entity": {
@@ -95,7 +95,7 @@ def create_thread(space_id: int, name: str, access_data: AccessData | None = Non
     res: dict = post(
         path="space/thread",
         json_={
-            "space": space_id,
+            "space": int(space_id),
             "name": name
         },
         access_data=access_data

@@ -197,6 +197,7 @@ class KintoneRecordSingleLineTextField(_KintoneRecordStrField):
     @classmethod
     def field_type(cls) -> str:
         return "SINGLE_LINE_TEXT"
+    # TODO: 自動計算が含まれるときだけupdatable: Falseにしたい
 
 
 @dataclass
@@ -219,6 +220,8 @@ class KintoneRecordRichTextField(_KintoneRecordStrField):
 
 @dataclass
 class KintoneRecordNumberField(KintoneRecordField[float | None]):
+    value: float | None  # mypy型チェックのために明示的にoverrideしておく
+
     @classmethod
     def field_type(cls) -> str:
         return "NUMBER"
@@ -237,6 +240,10 @@ class KintoneRecordCalcField(_KintoneRecordStrField):
     @classmethod
     def field_type(cls) -> str:
         return "CALC"
+
+    @classmethod
+    def updatable(cls) -> bool:
+        return False
 
 
 @dataclass
@@ -397,8 +404,11 @@ class KIntoneRecordSubtableRow:
     def set_field(self, field_: KintoneRecordField) -> None:
         self.fields[field_.code] = field_
 
-    def get_field(self, code: str) -> KintoneRecordField:
-        return self.fields[code]
+    def get_field(self, code: str, field_type: Type[_FieldType]) -> _FieldType:
+        field_: KintoneRecordField = self.fields[code]
+        if not isinstance(field_, field_type):
+            raise ValueError(f"Field type mismatch: {field_}")
+        return field_
 
 
 @dataclass
@@ -454,17 +464,29 @@ class KintoneRecordCategoryField(_KintoneRecordSetField):
     def field_type(cls) -> str:
         return "CATEGORY"
 
+    @classmethod
+    def updatable(cls) -> bool:
+        return False
+
 
 class KintoneRecordStatusField(_KintoneRecordStrField):
     @classmethod
     def field_type(cls) -> str:
         return "STATUS"
 
+    @classmethod
+    def updatable(cls) -> bool:
+        return False
+
 
 class KintoneRecordAssigneeField(_KintoneRecordCodeSelectField):
     @classmethod
     def field_type(cls) -> str:
         return "STATUS_ASSIGNEE"
+
+    @classmethod
+    def updatable(cls) -> bool:
+        return False
 
 
 _FieldType = TypeVar("_FieldType", bound=KintoneRecordField)
