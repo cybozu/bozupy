@@ -15,6 +15,14 @@ for _filepath in _filepaths:
     if _filepath.exists():
         dotenv.load_dotenv(_filepath, override=True)
 
+
+if os.getenv('LOG_LEVEL'):
+    logging.basicConfig(
+        level=os.getenv('LOG_LEVEL', 'INFO').upper(),
+        force=True
+    )
+
+
 BOZUPY_VERSION: str = "0.3.0"
 
 logging.debug(f"BOZUPY_VERSION: {BOZUPY_VERSION}")
