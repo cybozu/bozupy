@@ -23,13 +23,23 @@ if os.getenv('LOG_LEVEL'):
     )
 
 
-BOZUPY_VERSION: str = "0.3.0"
+BOZUPY_VERSION: str = "0.3.1"
 
 logging.debug(f"BOZUPY_VERSION: {BOZUPY_VERSION}")
 USER_AGENT: str = os.environ.get("USER_AGENT", f"bozupy:v{BOZUPY_VERSION}")
 DEFAULT_CYBOZU_SUBDOMAIN: str = os.environ.get("CYBOZU_SUBDOMAIN", "")
 DEFAULT_CYBOZU_USERNAME: str = os.environ.get("CYBOZU_USERNAME", "")
 DEFAULT_CYBOZU_PASSWORD: str = os.environ.get("CYBOZU_PASSWORD", "")
+if DEFAULT_CYBOZU_PASSWORD.startswith("aws:"):
+    import boto3
+    DEFAULT_CYBOZU_PASSWORD = boto3.Session(
+        profile_name=os.environ.get("AWS_SECRET_PROFILE", os.environ.get("AWS_PROFILE")),
+        region_name=os.environ.get("AWS_SECRET_REGION_NAME", os.environ.get("AWS_REGION_NAME", "ap-northeast-1"))
+    ).client(
+        service_name='secretsmanager',
+    ).get_secret_value(SecretId=DEFAULT_CYBOZU_PASSWORD[len("aws:"):].strip())["SecretString"]
+
+
 _is_dev_domain: bool = os.environ.get("CYBOZU_IS_DEV_DOMAIN", "false").lower() == "true"
 DEFAULT_OTP_SECRET: str = os.environ.get("CYBOZU_OTP_SECRET", "")
 DEFAULT_CYBOZU_REGION: str = os.environ.get("CYBOZU_REGION", "jp").lower()
