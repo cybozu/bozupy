@@ -13,6 +13,9 @@ runs:
       with:
         python-version: ${{ inputs.pythonVersion }}
         cache: pip
+    - uses: flatt-security/setup-takumi-guard-pypi@7d825811bb293b9e0230477165442580a0074280 # v1.0.0
+      with:
+        bot-id: BT01KNJSJ9PGFWK3H5T7NM3D4NSD
     - name: install dependencies
       shell: bash
       run: |
