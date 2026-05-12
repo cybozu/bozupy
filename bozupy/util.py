@@ -214,6 +214,10 @@ def input_text(is_one_line: bool = False) -> str:
     return '\n'.join(lines)
 
 
+def _is_auth_headers(header: str) -> bool:
+    return header.lower() in {"x-cybozu-authorization", "x-cybozu-api-token", "set-cookie", "cookie"}
+
+
 def debug_response_print(response: requests.Response) -> None:
     if os.environ.get("TEST", "") == "1":
         return
@@ -221,12 +225,12 @@ def debug_response_print(response: requests.Response) -> None:
         "##request",
         str(response.request.method),
         str(response.request.url),
-        str(response.request.headers),
+        str({k: v for k, v in response.request.headers.items() if not _is_auth_headers(k)}),
         str(response.request.body),
         "",
         "##response",
         str(response.status_code),
-        str(response.headers),
+        str({k: v for k, v in response.headers.items() if not _is_auth_headers(k)}),
         str(response.text)
     ])
     if response.status_code >= 400:

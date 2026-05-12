@@ -1,5 +1,7 @@
 config-variables:
   - DEBUG_MODE
+secret-variables:
+  - TAKUMI_GUARD_PYPI_BOT_ID
 paths:
 #  .github/workflows/**/*.yaml:
 #    ignore:

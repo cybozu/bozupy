@@ -22,43 +22,49 @@ jobs:
           filters: |
             bozupy:
               - 'bozupy/**'
-              - 'requirements.txt'
+              - 'uv.lock'
               - 'pyproject.toml'
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
+        with:
+          takumi_guard_pypi_bot_id: ${{ secrets.TAKUMI_GUARD_PYPI_BOT_ID }}
       - name: Run flake8
         run: |
-          flake8
+          uv run flake8 ./bozupy ./tests
   type-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
+        with:
+          takumi_guard_pypi_bot_id: ${{ secrets.TAKUMI_GUARD_PYPI_BOT_ID }}
       - name: run mypy
         run: |
-          mypy ./
+           uv run mypy ./bozupy ./tests
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
+        with:
+          takumi_guard_pypi_bot_id: ${{ secrets.TAKUMI_GUARD_PYPI_BOT_ID }}
       - name: create results directory
         run: |
           mkdir -p /tmp/results
       - name: run pytest
         run: |
-          python3 -m pytest --junit-xml /tmp/results/pytest.xml -v --cov=bozupy --cov-report=term-missing
+          uv run python3 -m pytest --junit-xml /tmp/results/pytest.xml -v --cov=bozupy --cov-report=term-missing
         continue-on-error: true
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test_results
           path: /tmp/results/*.xml
       - name: publish test results
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@5e05ac00ad0604dfb7e313ae412aa3284f4906d6 # v6.3.0
         if: always()
         with:
           report_paths: /tmp/results/*.xml
@@ -66,11 +72,13 @@ jobs:
   check-coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
+        with:
+          takumi_guard_pypi_bot_id: ${{ secrets.TAKUMI_GUARD_PYPI_BOT_ID }}
       - name: check coverage
         run: |
-          result=$(python3 -m pytest --cov=bozupy | grep "TOTAL.*%")
+          result=$(uv run python3 -m pytest --cov=bozupy | grep "TOTAL.*%")
           percent="$(echo ${result} | cut -d" " -f 4 | sed -e "s/%//g")"
           if [ "${percent}" -lt 85 ]; then
               echo "Coverage is less than 85%."
@@ -79,12 +87,18 @@ jobs:
   version-match:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: match version
+      - uses: actions/checkout@v6
+      - name: get pyproject.toml version
+        id: get-pyproject-version
+        uses: ./.github/actions/get-version
+      - name: get setting.py version
+        id: get-setting-version
         run: |
           SETTING_VERSION=$(grep "BOZUPY_VERSION: str = " bozupy/setting.py | sed -e "s/.* \"//" | sed -e "s/\".*//")
-          PROJECT_VERSION=$(grep "version = " pyproject.toml | sed -e "s/.* = \"//" | sed -e "s/\".*//")
-          if [ "${SETTING_VERSION}" != "${PROJECT_VERSION}" ]; then
+          echo "version=${SETTING_VERSION}" >> "${GITHUB_OUTPUT}"
+      - name: check version match
+        run: |
+          if [ "${{ steps.get-pyproject-version.outputs.version }}" != "${{ steps.get-setting-version.outputs.version }}" ]; then
               echo "BOZUPY_VERSION and pyproject.toml version are different."
               exit 1
           fi
@@ -93,20 +107,19 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.ref != 'refs/heads/main' && needs.changes.outputs.bozupy == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: new branch version
-        id: new-branch
-        run: |
-          NEW_BRANCH_VERSION=$(grep "BOZUPY_VERSION: str = " bozupy/setting.py | sed -e "s/.* \"//" | sed -e "s/\".*//")
-          echo "version=${NEW_BRANCH_VERSION}" >> "${GITHUB_OUTPUT}"
-      - uses: actions/checkout@v4
+        uses: ./.github/actions/get-version
+        id: new-version
+      - name: main branch version
+        id: old-version
+        uses: ./.github/actions/get-version
         with:
-            ref: main
+          branch: main
       - name: check version between main and new branch
         run: |
-          MAIN_BRANCH_VERSION=$(grep "BOZUPY_VERSION: str = " bozupy/setting.py | sed -e "s/.* \"//" | sed -e "s/\".*//")
-          if [ "${MAIN_BRANCH_VERSION}" = "${{ steps.new-branch.outputs.version }}" ]; then
-              echo "BOZUPY_VERSION is not bumped yet."
+          if [ "${{ steps.new-version.outputs.version }}" = "${{ steps.old-version.outputs.version }}" ]; then
+              echo ".version is not bumped yet."
               exit 1
           fi
   check-code:
@@ -114,10 +127,10 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.changes.outputs.bozupy == 'true'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
         with:
-          python-version: 3.13
+          takumi_guard_pypi_bot_id: ${{ secrets.TAKUMI_GUARD_PYPI_BOT_ID }}
       - name: code check
         run: |
-          python3 bin/code-check.py
+          uv run python3 bin/code-check.py

@@ -1,8 +1,11 @@
+import logging
 from datetime import date, datetime, timedelta, timezone, time
 
 from lxml import html
 
 import pytest
+import requests
+import responses
 
 from bozupy import util as sut
 
@@ -187,3 +190,121 @@ def test_get_float_optional(input_: dict, expected: float | None):
 ])
 def test_json_get_optional(data: dict[str, dict[str, str]], key1: str, key2: str, expected: str | None) -> None:
     assert sut.json_get_optional(data, key1, key2) == expected
+
+
+@responses.activate
+def test_debug_response_print(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
+    monkeypatch.setenv("TEST", "0")
+    responses.add(
+        responses.GET,
+        "https://example.com/path",
+        status=200,
+        body='{"hoge": "fuga"}',
+        content_type="application/json",
+        headers={"X-Response-Safe": "response-safe-value"}
+    )
+    res: requests.Response = requests.get("https://example.com/path", headers={"X-Request-Safe": "request-safe-value"})
+    with caplog.at_level(logging.DEBUG):
+        sut.debug_response_print(res)
+    assert "X-Request-Safe" in caplog.text
+    assert "request-safe-value" in caplog.text
+    assert "X-Response-Safe" in caplog.text
+    assert "response-safe-value" in caplog.text
+
+
+@pytest.mark.parametrize("auth_header", [
+    "X-Cybozu-Authorization",
+    "X-Cybozu-API-Token",
+    "Cookie",
+    "x-cybozu-authorization",
+    "x-cybozu-api-token",
+    "cookie",
+    "X-CYBOZU-AUTHORIZATION",
+    "X-CYBOZU-API-TOKEN",
+    "COOKIE"
+])
+@responses.activate
+def test_debug_response_print_リクエストの認証ヘッダーがログに出力されない(
+    auth_header: str,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setenv("TEST", "0")
+    responses.add(
+        responses.GET,
+        "https://example.com/path",
+        status=200,
+        body='{"hoge": "fuga"}',
+        content_type="application/json"
+    )
+    secret: str = "TOP_SECRET_AUTH_VALUE"
+    res: requests.Response = requests.get("https://example.com/path", headers={auth_header: secret})
+    with caplog.at_level(logging.DEBUG):
+        sut.debug_response_print(res)
+    assert secret not in caplog.text
+
+
+@pytest.mark.parametrize("auth_header", [
+    "Set-Cookie",
+    "set-cookie",
+    "SET-COOKIE"
+])
+@responses.activate
+def test_debug_response_print_レスポンスの認証ヘッダーがログに出力されない(
+    auth_header: str,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setenv("TEST", "0")
+    secret: str = "session_id=TOP_SECRET_SESSION_VALUE"
+    responses.add(
+        responses.GET,
+        "https://example.com/path",
+        status=200,
+        body='{"hoge": "fuga"}',
+        content_type="application/json",
+        headers={auth_header: secret}
+    )
+    res: requests.Response = requests.get("https://example.com/path")
+    with caplog.at_level(logging.DEBUG):
+        sut.debug_response_print(res)
+    assert secret not in caplog.text
+
+
+@responses.activate
+def test_debug_response_print_ステータスコードが400以上の場合warningレベルでログ出力される(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setenv("TEST", "0")
+    responses.add(
+        responses.GET,
+        "https://example.com/path",
+        status=500,
+        body='{"error": "boom"}',
+        content_type="application/json"
+    )
+    res: requests.Response = requests.get("https://example.com/path")
+    with caplog.at_level(logging.DEBUG):
+        sut.debug_response_print(res)
+    warning_records: list[logging.LogRecord] = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert len(warning_records) == 1
+
+
+@responses.activate
+def test_debug_response_print_TEST環境変数が1の場合ログ出力されない(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setenv("TEST", "1")
+    responses.add(
+        responses.GET,
+        "https://example.com/path",
+        status=200,
+        body='{"hoge": "fuga"}',
+        content_type="application/json"
+    )
+    res: requests.Response = requests.get("https://example.com/path")
+    with caplog.at_level(logging.DEBUG):
+        sut.debug_response_print(res)
+    assert caplog.text == ""
