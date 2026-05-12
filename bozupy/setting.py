@@ -23,7 +23,7 @@ if os.getenv('LOG_LEVEL'):
     )
 
 
-BOZUPY_VERSION: str = "0.3.1"
+BOZUPY_VERSION: str = "0.4.0"
 
 logging.debug(f"BOZUPY_VERSION: {BOZUPY_VERSION}")
 USER_AGENT: str = os.environ.get("USER_AGENT", f"bozupy:v{BOZUPY_VERSION}")
