@@ -59,6 +59,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
         with:
+          with_test: "false"
           takumi_guard_pypi_bot_id: ${{ secrets.TAKUMI_GUARD_PYPI_BOT_ID }}
       - name: install pypa/build
         run: |
