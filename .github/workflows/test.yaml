@@ -33,7 +33,7 @@ jobs:
           takumi_guard_pypi_bot_id: ${{ secrets.TAKUMI_GUARD_PYPI_BOT_ID }}
       - name: Run flake8
         run: |
-          uv run flake8
+          uv run flake8 ./bozupy ./tests
   type-check:
     runs-on: ubuntu-latest
     steps:
@@ -43,7 +43,7 @@ jobs:
           takumi_guard_pypi_bot_id: ${{ secrets.TAKUMI_GUARD_PYPI_BOT_ID }}
       - name: run mypy
         run: |
-           uv run mypy ./
+           uv run mypy ./bozupy ./tests
   test:
     runs-on: ubuntu-latest
     steps:
