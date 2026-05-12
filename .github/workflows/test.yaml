@@ -105,7 +105,7 @@ jobs:
   version-bump:
     needs: changes
     runs-on: ubuntu-latest
-    if: ${{ (needs.changes.outputs.bozupy == 'true') && (github.event_name == 'pull_request') }}
+    if: ${{ github.ref != 'refs/heads/main' && needs.changes.outputs.bozupy == 'true' }}
     steps:
       - uses: actions/checkout@v6
       - name: new branch version
