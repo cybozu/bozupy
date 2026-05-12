@@ -23,6 +23,16 @@ if os.getenv('LOG_LEVEL'):
     )
 
 
+def _fetch_from_secret_manager(secret_id: str) -> str:
+    import boto3
+    return boto3.Session(
+        profile_name=os.environ.get("AWS_SECRET_PROFILE", os.environ.get("AWS_PROFILE")),
+        region_name=os.environ.get("AWS_SECRET_REGION_NAME", os.environ.get("AWS_REGION_NAME", "ap-northeast-1"))
+    ).client(
+        service_name='secretsmanager',
+    ).get_secret_value(SecretId=secret_id)["SecretString"]
+
+
 BOZUPY_VERSION: str = "0.4.0"
 
 logging.debug(f"BOZUPY_VERSION: {BOZUPY_VERSION}")
@@ -31,14 +41,7 @@ DEFAULT_CYBOZU_SUBDOMAIN: str = os.environ.get("CYBOZU_SUBDOMAIN", "")
 DEFAULT_CYBOZU_USERNAME: str = os.environ.get("CYBOZU_USERNAME", "")
 DEFAULT_CYBOZU_PASSWORD: str = os.environ.get("CYBOZU_PASSWORD", "")
 if DEFAULT_CYBOZU_PASSWORD.startswith("aws:"):
-    import boto3
-    DEFAULT_CYBOZU_PASSWORD = boto3.Session(
-        profile_name=os.environ.get("AWS_SECRET_PROFILE", os.environ.get("AWS_PROFILE")),
-        region_name=os.environ.get("AWS_SECRET_REGION_NAME", os.environ.get("AWS_REGION_NAME", "ap-northeast-1"))
-    ).client(
-        service_name='secretsmanager',
-    ).get_secret_value(SecretId=DEFAULT_CYBOZU_PASSWORD[len("aws:"):].strip())["SecretString"]
-
+    DEFAULT_CYBOZU_PASSWORD = _fetch_from_secret_manager(DEFAULT_CYBOZU_PASSWORD[len("aws:"):].strip())
 
 _is_dev_domain: bool = os.environ.get("CYBOZU_IS_DEV_DOMAIN", "false").lower() == "true"
 DEFAULT_OTP_SECRET: str = os.environ.get("CYBOZU_OTP_SECRET", "")
@@ -53,5 +56,7 @@ for key, value in os.environ.items():
         except ValueError:
             logging.warning(f"Invalid app_id: {key}")
             continue
+        if value.startswith("aws:"):
+            value = _fetch_from_secret_manager(value[len("aws:"):].strip())
         DEFAULT_APP_TOKENS[app_id] = value
         logging.debug(f"App token for app_id {app_id} is set")
