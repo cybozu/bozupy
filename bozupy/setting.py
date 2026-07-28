@@ -33,15 +33,45 @@ def _fetch_from_secret_manager(secret_id: str) -> str:
     ).get_secret_value(SecretId=secret_id)["SecretString"]
 
 
+def _fetch_from_1password(secret_reference: str) -> str:
+    import shutil
+    import subprocess
+    if not secret_reference.startswith("op://"):
+        secret_reference = "op://" + secret_reference.lstrip("/")
+    op_command: str | None = shutil.which(os.environ.get("OP_COMMAND", "op"))
+    if op_command is None:
+        raise RuntimeError("1Password CLI (op) is not found. Install it to use the 'op:' prefix.")
+    command: list[str] = [op_command, "read", "--no-newline"]
+    if os.environ.get("OP_ACCOUNT"):
+        command += ["--account", os.environ["OP_ACCOUNT"]]
+    command.append(secret_reference)
+    try:
+        completed: subprocess.CompletedProcess[str] = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to read a secret from 1Password: {e.stderr.strip()}") from e
+    return completed.stdout.strip()
+
+
+def _resolve_secret(value: str) -> str:
+    if value.startswith("aws:"):
+        return _fetch_from_secret_manager(value[len("aws:"):].strip())
+    if value.startswith("op:"):
+        return _fetch_from_1password(value[len("op:"):].strip())
+    return value
+
+
 BOZUPY_VERSION: str = "0.5.0"
 
 logging.debug(f"BOZUPY_VERSION: {BOZUPY_VERSION}")
 USER_AGENT: str = os.environ.get("USER_AGENT", f"bozupy:v{BOZUPY_VERSION}")
 DEFAULT_CYBOZU_SUBDOMAIN: str = os.environ.get("CYBOZU_SUBDOMAIN", "")
 DEFAULT_CYBOZU_USERNAME: str = os.environ.get("CYBOZU_USERNAME", "")
-DEFAULT_CYBOZU_PASSWORD: str = os.environ.get("CYBOZU_PASSWORD", "")
-if DEFAULT_CYBOZU_PASSWORD.startswith("aws:"):
-    DEFAULT_CYBOZU_PASSWORD = _fetch_from_secret_manager(DEFAULT_CYBOZU_PASSWORD[len("aws:"):].strip())
+DEFAULT_CYBOZU_PASSWORD: str = _resolve_secret(os.environ.get("CYBOZU_PASSWORD", ""))
 
 _is_dev_domain: bool = os.environ.get("CYBOZU_IS_DEV_DOMAIN", "false").lower() == "true"
 DEFAULT_OTP_SECRET: str = os.environ.get("CYBOZU_OTP_SECRET", "")
@@ -56,7 +86,5 @@ for key, value in os.environ.items():
         except ValueError:
             logging.warning(f"Invalid app_id: {key}")
             continue
-        if value.startswith("aws:"):
-            value = _fetch_from_secret_manager(value[len("aws:"):].strip())
-        DEFAULT_APP_TOKENS[app_id] = value
+        DEFAULT_APP_TOKENS[app_id] = _resolve_secret(value)
         logging.debug(f"App token for app_id {app_id} is set")
