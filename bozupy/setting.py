@@ -33,7 +33,7 @@ def _fetch_from_secret_manager(secret_id: str) -> str:
     ).get_secret_value(SecretId=secret_id)["SecretString"]
 
 
-BOZUPY_VERSION: str = "0.4.0"
+BOZUPY_VERSION: str = "0.5.0"
 
 logging.debug(f"BOZUPY_VERSION: {BOZUPY_VERSION}")
 USER_AGENT: str = os.environ.get("USER_AGENT", f"bozupy:v{BOZUPY_VERSION}")
