@@ -70,7 +70,6 @@ def to_search_result(hit: dict, subdomain: str, is_dev: bool) -> KintoneSearchRe
     type_str: str = hit["type"]
     is_attachment: bool = type_str == KintoneSearchTypes.ATTACHMENT.value
     if is_attachment:
-        # 添付ファイルの場合は添付先の種類に応じたDTOを返す
         type_str = hit["attachment"]["attachedTo"]
     match type_str:
         case "RECORD":
@@ -182,11 +181,9 @@ def to_search_result(hit: dict, subdomain: str, is_dev: bool) -> KintoneSearchRe
                 **people_comment_kwargs
             )
         case "MESSAGE_COMMENT":
-            # メッセージはアクセス権の扱いが他と異なるため、対応は別途検討する
             logging.info("MESSAGE_COMMENT is not supported yet...")
             return None
         case _ as unknown_type:
-            # 検索処理の改善で種類が増えても壊れないようにする
             logging.warning(f"{unknown_type} is not implemented yet...")
             return None
 
@@ -194,7 +191,6 @@ def to_search_result(hit: dict, subdomain: str, is_dev: bool) -> KintoneSearchRe
 def _to_base_kwargs(hit: dict, target: dict, subdomain: str, is_dev: bool) -> dict:
     return {
         "raw_url": hit["url"],
-        # 検索語がタグで囲まれている場合があるので、タグを取り除いた文字列にする
         "snippets": [html_to_text(f"<div>{snippet}</div>").strip() for snippet in hit.get("snippets", [])],
         "created_at": kintone_str_to_datetime(target["createdAt"]),
         "creator_code": target["creator"]["code"],

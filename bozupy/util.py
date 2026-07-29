@@ -348,7 +348,6 @@ def resolve_app_token(app_id: int,
                       secret_manager_prefix: str,
                       onepassword_vault: str = "",
                       onepassword_field: str = "") -> str:
-    # シークレットストア上のキー名は環境変数と同じ`KINTONE_APP_TOKEN_<アプリID>`で統一している
     if not secret_manager_prefix:
         return ""
     secret_key: str = f"{APP_TOKEN_KEY_PREFIX}{app_id}"

@@ -129,7 +129,6 @@ def search_by_page_token(conditions: list[KintoneSearchCondition],
     if access_data is None:
         access_data = AccessData()
     _validate(conditions, limit, scopes, exclude_scopes, created_after, created_before, creators, sort_by, sort_order)
-    # 公式の検索APIはAPIトークン認証に対応していないので、app_idは渡さずパスワード認証を使う
     json_: dict = post(
         path="search",
         json_=dxo.to_request_body(
@@ -190,7 +189,6 @@ def _validate(conditions: list[KintoneSearchCondition],
     if keyword_count > _MAX_KEYWORD_COUNT:
         raise ValueError(f"Too many keywords: {keyword_count} (max {_MAX_KEYWORD_COUNT})")
     if not [c for c in conditions if c.operator in {KintoneSearchOperators.AND, KintoneSearchOperators.OR}]:
-        # NOTだけの検索条件では検索結果が必ず空になる
         raise ValueError("At least one AND or OR condition must be provided")
     if limit < 1 or limit > _MAX_LIMIT:
         raise ValueError(f"limit must be between 1 and {_MAX_LIMIT}: {limit}")

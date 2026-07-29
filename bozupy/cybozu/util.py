@@ -25,7 +25,6 @@ def get_headers(access_data: AccessData | None, has_body: bool = False, app_ids:
         app_ids = {int(app_ids)}
     api_token_header: str | None = _to_api_token_header(access_data, app_ids)
     if api_token_header is None and not access_data.has_auth:
-        # パスワード認証もできない場合の最後の手段としてシークレットストアを見る
         _fetch_app_tokens_from_secret_manager(access_data, app_ids)
         api_token_header = _to_api_token_header(access_data, app_ids)
     if api_token_header is not None:
@@ -41,7 +40,6 @@ def get_headers(access_data: AccessData | None, has_body: bool = False, app_ids:
 
 
 def _to_api_token_header(access_data: AccessData, app_ids: set[int]) -> str | None:
-    # 一部のアプリのトークンしかない場合はそのアプリ以外へのアクセスが失敗するので、APIトークン認証は使わない
     if not app_ids or not app_ids.issubset(access_data.app_tokens):
         return None
     return ",".join(sorted({access_data.app_tokens[app_id] for app_id in app_ids}))

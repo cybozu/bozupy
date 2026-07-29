@@ -56,7 +56,6 @@ class KintoneSearchMatchedField:
 
 @dataclass
 class KintoneSearchResult(metaclass=ABCMeta):
-    # レスポンスのhits[].urlそのもの。ゲストスペースのURLもそのまま入る
     raw_url: str
     snippets: list[str]
     created_at: datetime
@@ -81,7 +80,6 @@ class KintoneSearchResult(metaclass=ABCMeta):
 
 @dataclass
 class KintoneAttachmentSearchResult(KintoneSearchResult, metaclass=ABCMeta):
-    # 添付ファイル自身のURLはレスポンスからはわからないので、urlは添付先のURLになる
     file_key: str
     file_name: str
     file_created_at: datetime
@@ -121,7 +119,6 @@ class KintoneThreadSearchResult(KintoneSpaceSearchResult):
 @dataclass
 class KintoneThreadCommentSearchResult(KintoneThreadSearchResult):
     comment_id: int
-    # 返信の場合のみ返信のIDが入る
     reply_id: int | None
 
     @property
@@ -150,7 +147,6 @@ class KintoneRecordRelatedSearchResult(KintoneSearchResult, metaclass=ABCMeta):
     app_name: str
     record_id: int
     record_title: str
-    # スペース内アプリの場合のみ入る
     space_id: int | None
     space_name: str | None
 
@@ -189,7 +185,6 @@ class KintonePeopleCommentSearchResult(KintoneSearchResult):
     owner_code: str
     owner_name: str
     comment_id: int
-    # 返信の場合のみ返信のIDが入る
     reply_id: int | None
 
     @property
