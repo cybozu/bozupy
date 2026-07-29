@@ -1,0 +1,29 @@
+{
+  "type": "ATTACHMENT",
+  "url": "https://test.cybozu.com/k/#/space/18/thread/34/1234",
+  "snippets": [
+    "営業支援を目的として、提案資料のテンプレートを新しく整備しました。"
+  ],
+  "threadComment": {
+    "commentId": "1234",
+    "spaceId": "18",
+    "spaceName": "営業本部",
+    "threadId": "34",
+    "threadName": "提案資料の整備",
+    "createdAt": "2024-03-28T09:13:00.000Z",
+    "creator": {
+      "code": "user1",
+      "name": "ユーザー1"
+    }
+  },
+  "attachment": {
+    "attachedTo": "THREAD_COMMENT",
+    "fileKey": "20250804065242B76047BB21494FE5BD4FA54590A50984300",
+    "name": "予算管理表_2025年度.xlsx",
+    "createdAt": "2025-08-04T06:53:00.000Z",
+    "creator": {
+      "code": "user2",
+      "name": "ユーザー2"
+    }
+  }
+}

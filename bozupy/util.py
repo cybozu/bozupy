@@ -39,6 +39,8 @@ _TIME_FORMAT_LIST: list[str] = [
 _LINK_PATTERN: Pattern = re.compile(r"(https?://\S+)")
 _URL_PATTERN: Pattern = re.compile(r"https?://[\w/:%#$&?()~.=+-]+")
 
+APP_TOKEN_KEY_PREFIX: str = "KINTONE_APP_TOKEN_"
+
 
 def find_refs(text: str) -> set[str]:
     links: set[str] = set([])
@@ -298,3 +300,59 @@ def json_get_optional(json_: dict[str, dict[str, str]], key1: str, key2: str = "
             return None
         return json_[key1].get(key2, None)
     return None
+
+
+def fetch_from_secret_manager(secret_id: str) -> str:
+    import boto3
+    return boto3.Session(
+        profile_name=os.environ.get("AWS_SECRET_PROFILE", os.environ.get("AWS_PROFILE")),
+        region_name=os.environ.get("AWS_SECRET_REGION_NAME", os.environ.get("AWS_REGION_NAME", "ap-northeast-1"))
+    ).client(
+        service_name='secretsmanager',
+    ).get_secret_value(SecretId=secret_id)["SecretString"]
+
+
+def fetch_from_1password(secret_reference: str) -> str:
+    import shutil
+    import subprocess
+    if not secret_reference.startswith("op://"):
+        secret_reference = "op://" + secret_reference.lstrip("/")
+    op_command: str | None = shutil.which(os.environ.get("OP_COMMAND", "op"))
+    if op_command is None:
+        raise RuntimeError("1Password CLI (op) is not found. Install it to use the 'op:' prefix.")
+    command: list[str] = [op_command, "read", "--no-newline"]
+    if os.environ.get("OP_ACCOUNT"):
+        command += ["--account", os.environ["OP_ACCOUNT"]]
+    command.append(secret_reference)
+    try:
+        completed: subprocess.CompletedProcess[str] = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to read a secret from 1Password: {e.stderr.strip()}") from e
+    return completed.stdout.strip()
+
+
+def resolve_secret(value: str) -> str:
+    if value.startswith("aws:"):
+        return fetch_from_secret_manager(value[len("aws:"):].strip())
+    if value.startswith("op:"):
+        return fetch_from_1password(value[len("op:"):].strip())
+    return value
+
+
+def resolve_app_token(app_id: int,
+                      secret_manager_prefix: str,
+                      onepassword_vault: str = "",
+                      onepassword_field: str = "") -> str:
+    if not secret_manager_prefix:
+        return ""
+    secret_key: str = f"{APP_TOKEN_KEY_PREFIX}{app_id}"
+    if secret_manager_prefix == "aws":
+        return fetch_from_secret_manager(secret_key)
+    if secret_manager_prefix == "op":
+        return fetch_from_1password(f"op://{onepassword_vault}/{secret_key}/{onepassword_field}")
+    raise ValueError(f"Invalid SECRET_MANAGER_PREFIX: {secret_manager_prefix}")

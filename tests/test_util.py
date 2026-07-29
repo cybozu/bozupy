@@ -1,11 +1,14 @@
 import logging
+import subprocess
 from datetime import date, datetime, timedelta, timezone, time
+from unittest.mock import MagicMock
 
 from lxml import html
 
 import pytest
 import requests
 import responses
+from pytest_mock import MockerFixture
 
 from bozupy import util as sut
 
@@ -308,3 +311,111 @@ def test_debug_response_print_TEST環境変数が1の場合ログ出力されな
     with caplog.at_level(logging.DEBUG):
         sut.debug_response_print(res)
     assert caplog.text == ""
+
+
+def test_fetch_from_secret_manager(mocker: MockerFixture) -> None:
+    session: MagicMock = mocker.patch("boto3.Session")
+    session.return_value.client.return_value.get_secret_value.return_value = {"SecretString": "secret-value"}
+    assert sut.fetch_from_secret_manager("my/secret") == "secret-value"
+    session.return_value.client.return_value.get_secret_value.assert_called_once_with(SecretId="my/secret")
+
+
+@pytest.mark.parametrize(["input_", "expected_reference"], [
+    ["op://Vault/Item/field", "op://Vault/Item/field"],
+    # op://が省略された記法も補完される
+    ["Vault/Item/field", "op://Vault/Item/field"],
+    ["/Vault/Item/field", "op://Vault/Item/field"]
+])
+def test_fetch_from_1password(input_: str, expected_reference: str, mocker: MockerFixture) -> None:
+    mocker.patch("shutil.which", return_value="/usr/bin/op")
+    run: MagicMock = mocker.patch(
+        "subprocess.run",
+        return_value=subprocess.CompletedProcess(args=[], returncode=0, stdout="token-value\n", stderr="")
+    )
+    assert sut.fetch_from_1password(input_) == "token-value"
+    assert run.call_args.args[0] == ["/usr/bin/op", "read", "--no-newline", expected_reference]
+
+
+def test_fetch_from_1password_OP_ACCOUNTとOP_COMMANDが使われる(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OP_COMMAND", "op-custom")
+    monkeypatch.setenv("OP_ACCOUNT", "my-account")
+    which: MagicMock = mocker.patch("shutil.which", return_value="/usr/bin/op-custom")
+    run: MagicMock = mocker.patch(
+        "subprocess.run",
+        return_value=subprocess.CompletedProcess(args=[], returncode=0, stdout="token-value", stderr="")
+    )
+    assert sut.fetch_from_1password("op://Vault/Item/field") == "token-value"
+    which.assert_called_once_with("op-custom")
+    assert run.call_args.args[0] == [
+        "/usr/bin/op-custom", "read", "--no-newline", "--account", "my-account", "op://Vault/Item/field"
+    ]
+
+
+def test_fetch_from_1password_opコマンドがない場合(mocker: MockerFixture) -> None:
+    mocker.patch("shutil.which", return_value=None)
+    with pytest.raises(RuntimeError):
+        sut.fetch_from_1password("op://Vault/Item/field")
+
+
+def test_fetch_from_1password_opコマンドが失敗した場合(mocker: MockerFixture) -> None:
+    mocker.patch("shutil.which", return_value="/usr/bin/op")
+    mocker.patch(
+        "subprocess.run",
+        side_effect=subprocess.CalledProcessError(returncode=1, cmd="op", stderr="item not found")
+    )
+    with pytest.raises(RuntimeError, match="item not found"):
+        sut.fetch_from_1password("op://Vault/Item/field")
+
+
+@pytest.mark.parametrize(["input_", "expected"], [
+    ["", ""],
+    ["plain-secret", "plain-secret"],
+    # プレフィックスは行頭のみ有効
+    ["value:aws:hoge", "value:aws:hoge"]
+])
+def test_resolve_secret_プレフィックスなしはそのまま返す(input_: str, expected: str) -> None:
+    assert sut.resolve_secret(input_) == expected
+
+
+def test_resolve_secret_aws(mocker: MockerFixture) -> None:
+    fetch: MagicMock = mocker.patch("bozupy.util.fetch_from_secret_manager", return_value="secret-value")
+    assert sut.resolve_secret("aws: my/secret ") == "secret-value"
+    fetch.assert_called_once_with("my/secret")
+
+
+def test_resolve_secret_1password(mocker: MockerFixture) -> None:
+    fetch: MagicMock = mocker.patch("bozupy.util.fetch_from_1password", return_value="secret-value")
+    assert sut.resolve_secret("op://Vault/Item/field") == "secret-value"
+    # op://の補完はfetch_from_1password側で行われる
+    fetch.assert_called_once_with("//Vault/Item/field")
+
+
+def test_resolve_app_token_プレフィックスなしは空文字を返す(mocker: MockerFixture) -> None:
+    fetch_aws: MagicMock = mocker.patch("bozupy.util.fetch_from_secret_manager")
+    fetch_op: MagicMock = mocker.patch("bozupy.util.fetch_from_1password")
+    assert sut.resolve_app_token(app_id=1, secret_manager_prefix="") == ""
+    fetch_aws.assert_not_called()
+    fetch_op.assert_not_called()
+
+
+def test_resolve_app_token_aws(mocker: MockerFixture) -> None:
+    fetch: MagicMock = mocker.patch("bozupy.util.fetch_from_secret_manager", return_value="token-value")
+    assert sut.resolve_app_token(app_id=123, secret_manager_prefix="aws") == "token-value"
+    fetch.assert_called_once_with("KINTONE_APP_TOKEN_123")
+
+
+def test_resolve_app_token_1password(mocker: MockerFixture) -> None:
+    fetch: MagicMock = mocker.patch("bozupy.util.fetch_from_1password", return_value="token-value")
+    actual: str = sut.resolve_app_token(
+        app_id=123,
+        secret_manager_prefix="op",
+        onepassword_vault="Employee",
+        onepassword_field="credential"
+    )
+    assert actual == "token-value"
+    fetch.assert_called_once_with("op://Employee/KINTONE_APP_TOKEN_123/credential")
+
+
+def test_resolve_app_token_不正なプレフィックス() -> None:
+    with pytest.raises(ValueError, match="Invalid SECRET_MANAGER_PREFIX"):
+        sut.resolve_app_token(app_id=1, secret_manager_prefix="gcp")

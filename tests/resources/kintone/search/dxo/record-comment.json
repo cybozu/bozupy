@@ -1,0 +1,19 @@
+{
+  "type": "RECORD_COMMENT",
+  "url": "https://test.cybozu.com/k/760/show#record=12787&comment=5",
+  "snippets": [
+    "営業支援を目的として、提案資料のテンプレートを新しく整備しました。"
+  ],
+  "recordComment": {
+    "appId": "760",
+    "appName": "活動報告",
+    "recordId": "12787",
+    "recordTitle": "顧客対応の効率化に向けて",
+    "commentId": "5",
+    "createdAt": "2024-03-28T09:13:00.000Z",
+    "creator": {
+      "code": "user1",
+      "name": "ユーザー1"
+    }
+  }
+}

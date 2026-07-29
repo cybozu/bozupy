@@ -1,0 +1,18 @@
+{
+  "type": "THREAD",
+  "url": "https://test.cybozu.com/k/#/space/18/thread/34",
+  "snippets": [
+    "営業支援を目的として、提案資料のテンプレートを新しく整備しました。"
+  ],
+  "thread": {
+    "threadId": "34",
+    "threadName": "提案資料の整備",
+    "spaceId": "18",
+    "spaceName": "営業本部",
+    "createdAt": "2024-03-28T09:13:00.000Z",
+    "creator": {
+      "code": "user1",
+      "name": "ユーザー1"
+    }
+  }
+}
