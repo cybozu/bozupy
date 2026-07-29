@@ -25,6 +25,18 @@ CYBOZU_PASSWORD=
 KINTONE_APP_TOKEN_<アプリID>=
 ```
 
+### シークレットの外部参照
+
+`CYBOZU_PASSWORD` と `KINTONE_APP_TOKEN_<アプリID>` は、値を直接書く代わりに以下のプレフィックスを付けると外部のシークレットストアから取得します。
+
+| 記法 | 取得先 | 例 |
+| --- | --- | --- |
+| `aws:<シークレットID>` | AWS Secrets Manager | `CYBOZU_PASSWORD=aws:my/cybozu/password` |
+| `op://<Vault>/<アイテム>/<フィールド>` | 1Password (`op` コマンド) | `CYBOZU_PASSWORD=op://Private/cybozu/password` |
+
+- `aws:` は `AWS_SECRET_PROFILE` (なければ `AWS_PROFILE`)、`AWS_SECRET_REGION_NAME` (なければ `AWS_REGION_NAME`、デフォルト `ap-northeast-1`) を使います。
+- `op://` は [1Password CLI](https://developer.1password.com/docs/cli/) の `op read` を実行するため、事前にインストールとサインインが必要です。`op:<Vault>/<アイテム>/<フィールド>` のように `//` を省略した記法も使えます。複数アカウントを使い分けている場合は `OP_ACCOUNT` を、`op` 以外のコマンド名を使う場合は `OP_COMMAND` を設定してください。
+
 ## 使い方
 
 ```python

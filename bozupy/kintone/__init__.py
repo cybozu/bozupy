@@ -1,4 +1,4 @@
-from . import app, comment, record, space, url
+from . import app, comment, record, search, space, url
 from .constant import EntityTypes, AppFieldTypes
 
 __all__: list[str] = [
@@ -7,6 +7,7 @@ __all__: list[str] = [
     app.__name__,
     comment.__name__,
     record.__name__,
+    search.__name__,
     space.__name__,
     url.__name__
 ]

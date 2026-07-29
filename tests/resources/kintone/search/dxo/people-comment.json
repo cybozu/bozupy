@@ -1,0 +1,19 @@
+{
+  "type": "PEOPLE_COMMENT",
+  "url": "https://test.cybozu.com/k/#/people/user/user3/347030",
+  "snippets": [
+    "顧客対応の品質向上に向けて、営業支援体制を見直しています。"
+  ],
+  "peopleComment": {
+    "commentId": "347030",
+    "owner": {
+      "code": "user3",
+      "name": "ユーザー3"
+    },
+    "createdAt": "2015-12-04T06:31:28.000Z",
+    "creator": {
+      "code": "user4",
+      "name": "ユーザー4"
+    }
+  }
+}
