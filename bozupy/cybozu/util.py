@@ -6,8 +6,8 @@ import requests
 
 from .dto import AccessData
 from ..exception import LoginRequired, AccessForbidden, RateLimitExceeded, RequestNotSuccess, APIError, NoJsonResponse
-from ..setting import USER_AGENT
-from ..util import debug_response_print
+from ..setting import USER_AGENT, DEFAULT_SECRET_MANAGER_PREFIX, DEFAULT_1PASSWORD_VAULT, DEFAULT_1PASSWORD_FIELD
+from ..util import debug_response_print, resolve_app_token
 
 
 def get_headers(access_data: AccessData | None, has_body: bool = False, app_ids: set[int] | int | None = None) -> dict[str, str]:
@@ -19,16 +19,17 @@ def get_headers(access_data: AccessData | None, has_body: bool = False, app_ids:
     }
     if has_body:
         headers["Content-Type"] = "application/json"
-    tokens: set[str] = set([])
     if app_ids is None:
         app_ids = set([])
     elif isinstance(app_ids, int) or isinstance(app_ids, float):
         app_ids = {int(app_ids)}
-    for app_id in app_ids:
-        if app_id in access_data.app_tokens:
-            tokens.add(access_data.app_tokens[app_id])
-    if tokens and app_ids and len(tokens) == len(app_ids):
-        headers["X-Cybozu-API-Token"] = ",".join(sorted(tokens))
+    api_token_header: str | None = _to_api_token_header(access_data, app_ids)
+    if api_token_header is None and not access_data.has_auth:
+        # パスワード認証もできない場合の最後の手段としてシークレットストアを見る
+        _fetch_app_tokens_from_secret_manager(access_data, app_ids)
+        api_token_header = _to_api_token_header(access_data, app_ids)
+    if api_token_header is not None:
+        headers["X-Cybozu-API-Token"] = api_token_header
         logging.info("Use API Token")
     elif access_data.has_auth:
         headers["X-Cybozu-Authorization"] = base64.b64encode(
@@ -37,6 +38,31 @@ def get_headers(access_data: AccessData | None, has_body: bool = False, app_ids:
     else:
         raise ValueError("No Auth Data")
     return headers
+
+
+def _to_api_token_header(access_data: AccessData, app_ids: set[int]) -> str | None:
+    # 一部のアプリのトークンしかない場合はそのアプリ以外へのアクセスが失敗するので、APIトークン認証は使わない
+    if not app_ids or not app_ids.issubset(access_data.app_tokens):
+        return None
+    return ",".join(sorted({access_data.app_tokens[app_id] for app_id in app_ids}))
+
+
+def _fetch_app_tokens_from_secret_manager(access_data: AccessData, app_ids: set[int]) -> None:
+    missing_app_ids: set[int] = {app_id for app_id in app_ids if app_id not in access_data.app_tokens}
+    if not DEFAULT_SECRET_MANAGER_PREFIX or not missing_app_ids:
+        return
+    logging.info(f"Get Auth Data from Secret Manager: {DEFAULT_SECRET_MANAGER_PREFIX}")
+    for app_id in missing_app_ids:
+        token_value: str = resolve_app_token(
+            app_id=app_id,
+            secret_manager_prefix=DEFAULT_SECRET_MANAGER_PREFIX,
+            onepassword_vault=DEFAULT_1PASSWORD_VAULT,
+            onepassword_field=DEFAULT_1PASSWORD_FIELD
+        )
+        if not token_value:
+            raise ValueError(f"API Token not found in Secret Manager for app_id {app_id}")
+        access_data.app_tokens[app_id] = token_value
+        logging.info(f"Get API Token from Secret Manager for app_id {app_id}")
 
 
 def check_response(res: requests.Response, is_plain: bool = False, no_debug_print: bool = False) -> None:
