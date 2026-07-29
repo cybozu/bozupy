@@ -1,0 +1,16 @@
+{
+  "type": "SPACE",
+  "url": "https://test.cybozu.com/k/#/space/18",
+  "snippets": [
+    "営業支援を目的として、提案資料のテンプレートを新しく整備しました。"
+  ],
+  "space": {
+    "spaceId": "18",
+    "spaceName": "営業本部",
+    "createdAt": "2024-03-28T09:13:00.000Z",
+    "creator": {
+      "code": "user1",
+      "name": "ユーザー1"
+    }
+  }
+}

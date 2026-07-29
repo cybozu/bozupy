@@ -1,0 +1,29 @@
+{
+  "type": "ATTACHMENT",
+  "url": "https://test.cybozu.com/k/#/people/user/user3/347030",
+  "snippets": [
+    "営業支援を目的として、提案資料のテンプレートを新しく整備しました。"
+  ],
+  "peopleComment": {
+    "commentId": "347030",
+    "owner": {
+      "code": "user3",
+      "name": "ユーザー3"
+    },
+    "createdAt": "2015-12-04T06:31:28.000Z",
+    "creator": {
+      "code": "user4",
+      "name": "ユーザー4"
+    }
+  },
+  "attachment": {
+    "attachedTo": "PEOPLE_COMMENT",
+    "fileKey": "20250804065242B76047BB21494FE5BD4FA54590A50984300",
+    "name": "予算管理表_2025年度.xlsx",
+    "createdAt": "2025-08-04T06:53:00.000Z",
+    "creator": {
+      "code": "user2",
+      "name": "ユーザー2"
+    }
+  }
+}

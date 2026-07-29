@@ -1,0 +1,19 @@
+{
+  "type": "MESSAGE_COMMENT",
+  "url": "https://test.cybozu.com/k/#/message/1;2/999",
+  "snippets": [
+    "営業支援を目的として、提案資料のテンプレートを新しく整備しました。"
+  ],
+  "messageComment": {
+    "commentId": "999",
+    "createdAt": "2024-03-28T09:13:00.000Z",
+    "creator": {
+      "code": "user1",
+      "name": "ユーザー1"
+    },
+    "recipient": {
+      "code": "user2",
+      "name": "ユーザー2"
+    }
+  }
+}
