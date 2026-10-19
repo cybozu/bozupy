@@ -1,0 +1,13 @@
+{
+  "id": "3",
+  "body": "皆さん確認お願いします。",
+  "createdAt": "2024-04-19T05:10:00Z",
+  "creator": {
+    "id": "",
+    "code": "",
+    "name": "user5(Deleted)"
+  },
+  "mentions": [
+    {"type": "ALL", "id": "all", "code": "", "name": "Attendees"}
+  ]
+}

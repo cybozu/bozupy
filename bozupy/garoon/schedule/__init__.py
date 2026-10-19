@@ -1,4 +1,5 @@
 from .client import get_event
+from .client import get_event_comments
 from .client import add_event
 from .client import update_event
 from .client import search_events
@@ -7,10 +8,11 @@ from .client import get_event_data_store
 from .client import add_event_data_store
 from .client import update_event_data_store
 from .client import get_facilities
-from .dto import Facility, GaroonEvent, RepeatInfo, GaroonRepeatEvent, GaroonEventBase
+from .dto import Facility, GaroonEvent, RepeatInfo, GaroonRepeatEvent, GaroonEventBase, GaroonEventComment
 
 __all__: list[str] = [
     get_event.__name__,
+    get_event_comments.__name__,
     add_event.__name__,
     update_event.__name__,
     search_events.__name__,
@@ -23,5 +25,6 @@ __all__: list[str] = [
     GaroonEvent.__name__,
     GaroonRepeatEvent.__name__,
     GaroonEventBase.__name__,
+    GaroonEventComment.__name__,
     RepeatInfo.__name__
 ]
