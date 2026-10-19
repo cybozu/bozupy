@@ -7,6 +7,7 @@ from pytest_mock import MockFixture
 from responses.registries import OrderedRegistry
 
 from bozupy.kintone.record.dto import KintoneRecord
+from bozupy.kintone.record.query import KintoneQueryBuilder
 from ...testtool import set_mock_response, DUMMY_ACCESS_DATA, AuthMode
 
 from bozupy.kintone.record import client as sut, KintoneRecordSingleLineTextField
@@ -18,6 +19,16 @@ def test_get_records_by_offset() -> None:
     assert len(list(sut.get_records_by_offset(1, None, DUMMY_ACCESS_DATA))) == 0
 
 
+@responses.activate
+def test_get_records_by_offset_フィールドを指定した場合はインデックス付きのクエリパラメータで送る() -> None:
+    set_mock_response(
+        "GET", "/k/v1/records.json", 200, {"records": []},
+        req_params={"app": 1, "fields[0]": "$id", "fields[1]": "a", "fields[2]": "b", "query": "limit 500 offset 0"},
+        strict=True, auth=AuthMode.API_TOKEN)
+    query: KintoneQueryBuilder = KintoneQueryBuilder().fields({"b", "a"})
+    assert len(list(sut.get_records_by_offset(1, query, DUMMY_ACCESS_DATA))) == 0
+
+
 @responses.activate(registry=OrderedRegistry)
 def test_get_records(mocker: MockFixture) -> None:
     set_mock_response("POST", "/k/v1/records/cursor.json", 200, {"id": "dummy"}, req_json={"app": 1, "size": 500}, auth=AuthMode.API_TOKEN)
@@ -25,6 +36,17 @@ def test_get_records(mocker: MockFixture) -> None:
     set_mock_response("DELETE", "/k/v1/records/cursor.json", 200, {}, req_params={"id": "dummy"}, auth=AuthMode.API_TOKEN)
     mocker.patch("bozupy.kintone.record.dxo.to_record", return_value=None)
     assert len(list(sut.get_records(1, None, DUMMY_ACCESS_DATA))) == 0
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_get_records_フィールドを指定した場合は配列で送る() -> None:
+    set_mock_response(
+        "POST", "/k/v1/records/cursor.json", 200, {"id": "dummy"},
+        req_json={"app": 1, "size": 500, "query": "", "fields": ["$id", "a", "b"]},
+        strict=True, auth=AuthMode.API_TOKEN)
+    set_mock_response("GET", "/k/v1/records/cursor.json", 200, {"records": [], "next": False}, req_params={"id": "dummy"}, auth=AuthMode.API_TOKEN)
+    query: KintoneQueryBuilder = KintoneQueryBuilder().fields({"b", "a"})
+    assert len(list(sut.get_records(1, query, DUMMY_ACCESS_DATA))) == 0
 
 
 @responses.activate

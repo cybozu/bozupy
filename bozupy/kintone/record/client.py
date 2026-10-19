@@ -29,8 +29,10 @@ def get_records_by_offset(app_id: int,
     if query_._fields:
         # レコードIDは必ず取得する
         query_.field("$id")
+        # GETのクエリ文字列では配列を fields[0]=...&fields[1]=... の形式で渡す
         # noinspection PyProtectedMember
-        params["fields"] = ",".join([str(f) for f in sorted(query_._fields)])
+        for i, f in enumerate(sorted(query_._fields)):
+            params[f"fields[{i}]"] = str(f)
     query_str: str = query_.build()
     if query_str:
         params["query"] = query_str
@@ -51,8 +53,9 @@ def get_records(
         if query._fields:
             # レコードIDは必ず取得する
             query.field("$id")
+            # JSONボディでは配列で渡す(文字列だとCB_IJ01になる)
             # noinspection PyProtectedMember
-            params["fields"] = ",".join([str(f) for f in sorted(query._fields)])
+            params["fields"] = [str(f) for f in sorted(query._fields)]
     cursor: str = post("records/cursor", params, app_id, access_data)["id"]
     is_cursor_deleted: bool = False
     try:
