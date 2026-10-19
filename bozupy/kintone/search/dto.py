@@ -58,9 +58,10 @@ class KintoneSearchMatchedField:
 class KintoneSearchResult(metaclass=ABCMeta):
     raw_url: str
     snippets: list[str]
-    created_at: datetime
-    creator_code: str
-    creator_name: str
+    # レコードとその添付ファイルでは、作成日時・作成者フィールドの閲覧権限がない場合にNoneになる
+    created_at: datetime | None
+    creator_code: str | None
+    creator_name: str | None
     subdomain: str
     is_dev: bool
 
@@ -82,9 +83,9 @@ class KintoneSearchResult(metaclass=ABCMeta):
 class KintoneAttachmentSearchResult(KintoneSearchResult, metaclass=ABCMeta):
     file_key: str
     file_name: str
-    file_created_at: datetime
-    file_creator_code: str
-    file_creator_name: str
+    file_created_at: datetime | None
+    file_creator_code: str | None
+    file_creator_name: str | None
 
 
 @dataclass

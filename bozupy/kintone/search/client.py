@@ -28,6 +28,7 @@ def search_by_keywords(keywords: list[str],
                        creators: set[str] | None = None,
                        sort_by: KintoneSearchSortKeys = KintoneSearchSortKeys.RELEVANCE,
                        sort_order: KintoneSearchSortOrders = KintoneSearchSortOrders.DESC,
+                       include_synonyms: bool = False,
                        access_data: AccessData | None = None) -> Iterator[KintoneSearchResult]:
     logging.info("Search by Keywords")
     yield from search_by_conditions(
@@ -40,6 +41,7 @@ def search_by_keywords(keywords: list[str],
         creators=creators,
         sort_by=sort_by,
         sort_order=sort_order,
+        include_synonyms=include_synonyms,
         access_data=access_data
     )
 
@@ -56,6 +58,7 @@ def search_by_keywords_with_limit(keywords: list[str],
                                   creators: set[str] | None = None,
                                   sort_by: KintoneSearchSortKeys = KintoneSearchSortKeys.RELEVANCE,
                                   sort_order: KintoneSearchSortOrders = KintoneSearchSortOrders.DESC,
+                                  include_synonyms: bool = False,
                                   access_data: AccessData | None = None) -> list[KintoneSearchResult]:
     logging.info("Search by Keywords with Limit")
     if limit < 1:
@@ -73,6 +76,7 @@ def search_by_keywords_with_limit(keywords: list[str],
         creators=creators,
         sort_by=sort_by,
         sort_order=sort_order,
+        include_synonyms=include_synonyms,
         access_data=access_data
     ):
         results.append(result)
@@ -90,6 +94,7 @@ def search_by_conditions(conditions: list[KintoneSearchCondition],
                          creators: set[str] | None = None,
                          sort_by: KintoneSearchSortKeys = KintoneSearchSortKeys.RELEVANCE,
                          sort_order: KintoneSearchSortOrders = KintoneSearchSortOrders.DESC,
+                         include_synonyms: bool = False,
                          access_data: AccessData | None = None) -> Iterator[KintoneSearchResult]:
     logging.info("Search by Conditions")
     page_token: str | None = None
@@ -106,6 +111,7 @@ def search_by_conditions(conditions: list[KintoneSearchCondition],
             creators=creators,
             sort_by=sort_by,
             sort_order=sort_order,
+            include_synonyms=include_synonyms,
             access_data=access_data
         )
         yield from results
@@ -124,6 +130,7 @@ def search_by_page_token(conditions: list[KintoneSearchCondition],
                          creators: set[str] | None = None,
                          sort_by: KintoneSearchSortKeys = KintoneSearchSortKeys.RELEVANCE,
                          sort_order: KintoneSearchSortOrders = KintoneSearchSortOrders.DESC,
+                         include_synonyms: bool = False,
                          access_data: AccessData | None = None) -> tuple[list[KintoneSearchResult], str | None]:
     logging.info("Search by Page Token")
     if access_data is None:
@@ -141,6 +148,7 @@ def search_by_page_token(conditions: list[KintoneSearchCondition],
             creators=creators,
             sort_by=sort_by,
             sort_order=sort_order,
+            include_synonyms=include_synonyms,
             limit=limit,
             page_token=page_token
         ),

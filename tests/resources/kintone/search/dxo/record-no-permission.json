@@ -1,0 +1,23 @@
+{
+  "type": "RECORD",
+  "url": "https://test.cybozu.com/k/760/show#record=12787",
+  "snippets": [
+    "営業支援を目的として、提案資料のテンプレートを新しく整備しました。"
+  ],
+  "record": {
+    "appId": "760",
+    "appName": "活動報告",
+    "recordId": "12787",
+    "recordTitle": "顧客対応の効率化に向けて",
+    "createdAt": null,
+    "creator": null,
+    "matchedFields": [
+      {
+        "code": "summary",
+        "label": "概要"
+      }
+    ],
+    "spaceId": "18",
+    "spaceName": "営業本部"
+  }
+}

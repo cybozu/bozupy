@@ -79,6 +79,27 @@ def test_to_search_result_record_attachment() -> None:
     assert str(actual.url) == "https://test.cybozu.com/k/760/show#record=12787"
 
 
+@pytest.mark.parametrize(["filename", "expected_type"], [
+    ["record-no-permission.json", KintoneRecordSearchResult],
+    ["record-attachment-no-permission.json", KintoneRecordAttachmentSearchResult],
+])
+def test_to_search_result_作成日時と作成者の閲覧権限がない場合(filename: str, expected_type: Type[KintoneRecordSearchResult]) -> None:
+    hit: dict = load(filename)
+    actual: KintoneSearchResult | None = sut.to_search_result(hit, DUMMY_ACCESS_DATA.subdomain, DUMMY_ACCESS_DATA.is_dev)
+    assert type(actual) is expected_type
+    assert isinstance(actual, KintoneRecordSearchResult)
+    assert actual.record_id == 12787
+    assert actual.created_at is None
+    assert actual.creator_code is None
+    assert actual.creator_name is None
+    if isinstance(actual, KintoneRecordAttachmentSearchResult):
+        assert actual.file_key == "20250804065242B76047BB21494FE5BD4FA54590A50984300"
+        assert actual.file_created_at is None
+        assert actual.file_creator_code is None
+        assert actual.file_creator_name is None
+    assert str(actual.url) == hit["url"]
+
+
 def test_to_search_result_record_comment_without_space() -> None:
     actual: KintoneSearchResult | None = sut.to_search_result(load("record-comment.json"), DUMMY_ACCESS_DATA.subdomain, DUMMY_ACCESS_DATA.is_dev)
     assert isinstance(actual, KintoneRecordCommentSearchResult)
@@ -161,6 +182,7 @@ def test_to_request_body_full() -> None:
         creators={"user2", "user1"},
         sort_by=KintoneSearchSortKeys.CREATED_AT,
         sort_order=KintoneSearchSortOrders.ASC,
+        include_synonyms=True,
         limit=10,
         page_token="token"
     ) == {
@@ -174,6 +196,7 @@ def test_to_request_body_full() -> None:
         "createdAfter": "2026-05-01T00:00:00+09:00",
         "createdBefore": "2026-05-31T23:59:59+09:00",
         "creators": ["user1", "user2"],
+        "includeSynonyms": True,
         "sort": {"by": "CREATED_AT", "order": "ASC"},
         "limit": 10,
         "pageToken": "token"
