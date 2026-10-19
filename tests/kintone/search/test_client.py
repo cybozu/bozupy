@@ -87,6 +87,7 @@ def test_search_with_all_options() -> None:
             "createdAfter": "2026-05-01T00:00:00+09:00",
             "createdBefore": "2026-05-31T23:59:59+09:00",
             "creators": ["user1"],
+            "includeSynonyms": True,
             "sort": {"by": "CREATED_AT", "order": "ASC"},
             "limit": 20
         },
@@ -103,6 +104,7 @@ def test_search_with_all_options() -> None:
         creators={"user1"},
         sort_by=KintoneSearchSortKeys.CREATED_AT,
         sort_order=KintoneSearchSortOrders.ASC,
+        include_synonyms=True,
         access_data=DUMMY_ACCESS_DATA
     )] == []
 

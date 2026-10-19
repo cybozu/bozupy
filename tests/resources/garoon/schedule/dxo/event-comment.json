@@ -1,0 +1,16 @@
+{
+  "id": "2",
+  "body": "<b>明日</b>の会議資料を共有します。",
+  "createdAt": "2024-04-19T04:46:25Z",
+  "creator": {
+    "id": "5",
+    "code": "user2",
+    "name": "ユーザー2"
+  },
+  "mentions": [
+    {"type": "USER", "id": "6", "code": "user3", "name": "ユーザー3"},
+    {"type": "USER", "id": "", "code": "", "name": "user4(Deleted)"},
+    {"type": "ORGANIZATION", "id": "3", "code": "org1", "name": "組織1"},
+    {"type": "ROLE", "id": "4", "code": "role1", "name": "ロール1"}
+  ]
+}

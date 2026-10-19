@@ -5,12 +5,13 @@ import requests
 
 # 何故かこの０ファイルだけfrom .dxo import to_eventだとテストでモックできなくなるので回避策
 from . import dxo
-from .dto import GaroonEvent, Facility, GaroonEventBase
+from .dto import GaroonEvent, Facility, GaroonEventBase, GaroonEventComment
 from ...cybozu.dto import AccessData
 from ...cybozu.util import get_headers, check_response
 from ...util import datetime_to_garoon_jst_str, date_to_garoon_jst_str, garoon_str_to_datetime
 
 _DEFAULT_LIMIT: int = 100
+_MAX_COMMENT_LIMIT: int = 1000
 
 
 def get_event(event_id: int, access_data: AccessData | None = None) -> GaroonEventBase:
@@ -24,6 +25,28 @@ def get_event(event_id: int, access_data: AccessData | None = None) -> GaroonEve
     )
     check_response(res)
     return dxo.to_event(res.json())
+
+
+def get_event_comments(event_id: int, access_data: AccessData | None = None) -> list[GaroonEventComment]:
+    logging.info(f"Get Event Comments: {event_id}")
+    if access_data is None:
+        access_data = AccessData()
+    # https://cybozu.dev/ja/garoon/docs/rest-api/schedule/get-schedule-comments/
+    comments: list[dict] = []
+    while True:
+        res: requests.Response = requests.get(
+            f"https://{access_data.host}/g/api/v1/schedule/events/{int(event_id)}/comments",
+            headers=get_headers(access_data=access_data),
+            params={"limit": str(_MAX_COMMENT_LIMIT), "offset": str(len(comments))}
+        )
+        check_response(res)
+        json_: dict = res.json()
+        result: list[dict] = json_.get("comments", [])
+        comments.extend(result)
+        if not json_.get("hasNext") or not result:
+            break
+    # 書き込み日時の降順で返ってくる
+    return [dxo.to_event_comment(comment, int(event_id), access_data.subdomain, access_data.is_dev) for comment in comments]
 
 
 def add_event(start: datetime, end: datetime, title: str, attendees: set[str], access_data: AccessData | None = None) -> int:
@@ -86,10 +109,13 @@ def update_event(event_id: int, start: datetime | None, end: datetime, title: st
     return None
 
 
-def search_events(access_data: AccessData | None = None, query: str | None = None, user_id: int | None = None, start: date | None = None, end: date | None = None) -> list[GaroonEvent]:
+def search_events(access_data: AccessData | None = None, query: str | None = None, user_id: int | None = None, start: date | None = None, end: date | None = None, facility_id: int | None = None) -> list[GaroonEvent]:
     logging.info("Search Events")
     if access_data is None:
         access_data = AccessData()
+    if user_id and facility_id:
+        raise ValueError("user_id and facility_id cannot be specified at the same time")
+    # https://cybozu.dev/ja/garoon/docs/rest-api/schedule/get-schedule-events/
     params: dict = {
         "limit": str(_DEFAULT_LIMIT),
     }
@@ -105,15 +131,21 @@ def search_events(access_data: AccessData | None = None, query: str | None = Non
         if user_id:
             params["targetType"] = "user"
             params["target"] = str(int(user_id))
+        elif facility_id:
+            params["targetType"] = "facility"
+            params["target"] = str(int(facility_id))
         res: requests.Response = requests.get(
             f"https://{access_data.host}/g/api/v1/schedule/events",
             headers=get_headers(access_data=access_data),
             params=params
         )
         check_response(res)
-        result: list[dict] = res.json().get("events", [])
+        json_: dict = res.json()
+        result: list[dict] = json_.get("events", [])
         events.extend(result)
-        if len(result) < _DEFAULT_LIMIT:
+        # limitより少ない件数で返ることがあるのでhasNextで判定する。hasNextがない場合は件数で判定する
+        has_next: bool | None = json_.get("hasNext")
+        if not result or not (len(result) >= _DEFAULT_LIMIT if has_next is None else has_next):
             break
     return [dxo.to_normal_event(event) for event in events]
 

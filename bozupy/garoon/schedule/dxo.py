@@ -1,6 +1,6 @@
-from datetime import datetime, time, date
+from datetime import datetime, time, date, timedelta
 
-from .dto import GaroonEvent, Facility, RepeatInfo, GaroonEventBase, GaroonRepeatEvent
+from .dto import GaroonEvent, Facility, RepeatInfo, GaroonEventBase, GaroonRepeatEvent, GaroonEventComment
 from ..constant import EventTypes
 from ...util import str_to_datetime, str_to_time, str_to_date
 
@@ -110,4 +110,44 @@ def to_facility(facility_json: dict) -> Facility:
         id=int(facility_json["id"]),
         name=facility_json["name"],
         parent_id=int(facility_json["parentId"]) if "parentId" in facility_json else None
+    )
+
+
+def to_event_comment(comment_json: dict, event_id: int, subdomain: str, is_dev: bool) -> GaroonEventComment:
+    mention_codes: set[str] = set([])
+    mention_org_codes: set[str] = set([])
+    mention_group_codes: set[str] = set([])
+    is_mention_all: bool = False
+    for mention_json in comment_json.get("mentions", []):
+        code: str = mention_json.get("code", "")
+        match mention_json["type"]:
+            case "ALL":
+                is_mention_all = True
+            case _ if not code:
+                # 削除済みの宛先はコードが空文字になる
+                continue
+            case "USER":
+                mention_codes.add(code)
+            case "ORGANIZATION":
+                mention_org_codes.add(code)
+            case "ROLE":
+                mention_group_codes.add(code)
+            case _:
+                continue
+    return GaroonEventComment(
+        id=int(comment_json["id"]),
+        text=str(comment_json["body"]),
+        # UTCで返ってくるのでJSTに変換する
+        commented_at=str_to_datetime(comment_json["createdAt"]) + timedelta(hours=9),
+        like_count=0,  # APIではいいね！数は取得できないので0にしておく
+        like_codes=set([]),
+        # 削除済みユーザーの場合は空文字になる
+        creator_code=comment_json["creator"]["code"],
+        mention_codes=mention_codes,
+        mention_org_codes=mention_org_codes,
+        mention_group_codes=mention_group_codes,
+        subdomain=subdomain,
+        is_dev=is_dev,
+        event_id=event_id,
+        is_mention_all=is_mention_all
     )

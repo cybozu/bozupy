@@ -23,6 +23,7 @@ def to_request_body(
         creators: set[str] | None = None,
         sort_by: KintoneSearchSortKeys = KintoneSearchSortKeys.RELEVANCE,
         sort_order: KintoneSearchSortOrders = KintoneSearchSortOrders.DESC,
+        include_synonyms: bool = False,
         limit: int | None = None,
         page_token: str | None = None) -> dict:
     body: dict = {
@@ -50,6 +51,8 @@ def to_request_body(
         body["createdBefore"] = datetime_to_kintone_str(created_before)
     if creators:
         body["creators"] = sorted(creators)
+    if include_synonyms:
+        body["includeSynonyms"] = True
     if limit is not None:
         body["limit"] = int(limit)
     if page_token is not None:
@@ -189,12 +192,13 @@ def to_search_result(hit: dict, subdomain: str, is_dev: bool) -> KintoneSearchRe
 
 
 def _to_base_kwargs(hit: dict, target: dict, subdomain: str, is_dev: bool) -> dict:
+    creator: dict | None = target.get("creator")
     return {
         "raw_url": hit["url"],
         "snippets": [html_to_text(f"<div>{snippet}</div>").strip() for snippet in hit.get("snippets", [])],
-        "created_at": kintone_str_to_datetime(target["createdAt"]),
-        "creator_code": target["creator"]["code"],
-        "creator_name": target["creator"]["name"],
+        "created_at": _to_datetime_optional(target),
+        "creator_code": None if creator is None else creator["code"],
+        "creator_name": None if creator is None else creator["name"],
         "subdomain": subdomain,
         "is_dev": is_dev
     }
@@ -202,10 +206,18 @@ def _to_base_kwargs(hit: dict, target: dict, subdomain: str, is_dev: bool) -> di
 
 def _to_attachment_kwargs(hit: dict) -> dict:
     attachment: dict = hit["attachment"]
+    creator: dict | None = attachment.get("creator")
     return {
         "file_key": attachment["fileKey"],
         "file_name": attachment["name"],
-        "file_created_at": kintone_str_to_datetime(attachment["createdAt"]),
-        "file_creator_code": attachment["creator"]["code"],
-        "file_creator_name": attachment["creator"]["name"]
+        "file_created_at": _to_datetime_optional(attachment),
+        "file_creator_code": None if creator is None else creator["code"],
+        "file_creator_name": None if creator is None else creator["name"]
     }
+
+
+def _to_datetime_optional(target: dict) -> datetime | None:
+    created_at: str | None = target.get("createdAt")
+    if not created_at:
+        return None
+    return kintone_str_to_datetime(created_at)

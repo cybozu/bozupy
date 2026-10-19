@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, time, date
 
+from ..base.dto import GaroonComment
 from ..constant import EventTypes
+from ..url.dto import GaroonEventUrl
 
 
 @dataclass
@@ -48,3 +50,19 @@ class GaroonEvent(GaroonEventBase):
 @dataclass
 class GaroonRepeatEvent(GaroonEventBase):
     repeat_info: RepeatInfo
+
+
+@dataclass(order=True)
+class GaroonEventComment(GaroonComment):
+    event_id: int = field(compare=False)
+    # 宛先に「予定の参加者全員」が指定されているか
+    is_mention_all: bool = field(compare=False, default=False)
+
+    @property
+    def url(self) -> GaroonEventUrl:
+        # コメント単位のURLはないので予定のURLを返す
+        return GaroonEventUrl(
+            subdomain=self.subdomain,
+            is_dev=self.is_dev,
+            event_id=self.event_id
+        )
