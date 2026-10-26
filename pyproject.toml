@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bozupy"
-version = "0.6.1"
+version = "0.6.2"
 authors = [
     {name="SirTeaBear", email="sirteabear@gmail.com"}
 ]
@@ -19,7 +19,6 @@ dependencies = [
 
 [dependency-groups]
 test = [
-    "certifi==2026.10.19",
     "flake8>=7.3.0",
     "mypy>=2.0.0",
     "pytest>=9.0.3",
@@ -32,19 +31,13 @@ test = [
     "types-requests>=2.33.0.20260508",
 ]
 
+[tool.uv]
+# CVE-2026-111497: brotli / brotlicffi は直接使っていないが、依存から入るときに修正版より古いものが入らないようにする
+constraint-dependencies = ["brotli>=1.2.1", "brotlicffi>=1.2.1.0"]
+
 # パッケージは Takumi Guard から取る。CI の setup-takumi-guard-pypi は PIP_INDEX_URL しか設定せず uv はそれを読まないので、
 # ここに書いておかないと lock が pypi.org を向き、CI も Guard を通らなくなる
 [[tool.uv.index]]
 name = "takumi-guard"
 url = "https://pypi.flatt.tech/simple/"
 default = true
-
-# eMudhra の中間 CA 鍵漏洩への対応: certifi 2026.10.19 が Takumi Guard に届くまで、certifi だけ PyPI から直接取る(例外として許可済み)。
-# Guard に届いたら、この index と sources の certifi、test グループの certifi の固定を外して Guard 経由に戻す
-[[tool.uv.index]]
-name = "pypi"
-url = "https://pypi.org/simple"
-explicit = true
-
-[tool.uv.sources]
-certifi = { index = "pypi" }
